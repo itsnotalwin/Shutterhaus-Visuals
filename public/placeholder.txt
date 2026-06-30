@@ -1,0 +1,5 @@
+You can upload your own profile image here!
+Please name your file exactly:
+alwin.jpg
+
+Once uploaded, the website will automatically load and display your photo instead of the default lead photographer image.

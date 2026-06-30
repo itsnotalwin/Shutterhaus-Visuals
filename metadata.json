@@ -1,0 +1,6 @@
+{
+  "name": "Shutterhaus Visuals",
+  "description": "A premium, high-contrast photography portfolio website with Oatmeal & Cocoa color themes, dynamic lightbox, interactive galleries, and GitHub Pages compatibility.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

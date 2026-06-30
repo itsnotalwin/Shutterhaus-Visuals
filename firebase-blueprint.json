@@ -1,0 +1,199 @@
+{
+  "$schema": "https://raw.githubusercontent.com/firebase/firebase-tools/master/schema/firestore-rules-blueprint.schema.json",
+  "collections": {
+    "users": {
+      "rules": {
+        "read": "auth != null",
+        "write": "auth != null && auth.uid == documentId"
+      },
+      "fields": {
+        "role": {
+          "type": "string",
+          "description": "User role: admin, client, or model"
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address"
+        }
+      }
+    },
+    "admins": {
+      "rules": {
+        "read": "auth != null",
+        "write": "auth != null && auth.uid == documentId"
+      },
+      "fields": {
+        "email": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "bootstrapped": {
+          "type": "boolean"
+        }
+      }
+    },
+    "portfolio": {
+      "rules": {
+        "read": "true",
+        "write": "auth != null && get(/databases/$(database)/documents/users/$(auth.uid)).data.role == 'admin'"
+      },
+      "fields": {
+        "id": {
+          "type": "string"
+        },
+        "imageUrl": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "year": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "dimensions": {
+          "type": "string"
+        },
+        "cameraSettings": {
+          "type": "map"
+        }
+      }
+    },
+    "bookings": {
+      "rules": {
+        "read": "true",
+        "write": "auth != null"
+      },
+      "fields": {
+        "id": {
+          "type": "string"
+        },
+        "clientName": {
+          "type": "string"
+        },
+        "clientEmail": {
+          "type": "string"
+        },
+        "clientPhone": {
+          "type": "string"
+        },
+        "company": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "time": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "string"
+        },
+        "package": {
+          "type": "string"
+        },
+        "vision": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "messages": {
+      "rules": {
+        "read": "auth != null && get(/databases/$(database)/documents/admins/$(auth.uid)).data.role == 'admin'",
+        "write": "true"
+      },
+      "fields": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "service": {
+          "type": "string"
+        },
+        "budget": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        }
+      }
+    },
+    "models": {
+      "rules": {
+        "read": "auth != null",
+        "write": "auth != null && auth.uid == documentId"
+      },
+      "fields": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "height": {
+          "type": "string"
+        },
+        "bust": {
+          "type": "string"
+        },
+        "waist": {
+          "type": "string"
+        },
+        "hips": {
+          "type": "string"
+        },
+        "shoe": {
+          "type": "string"
+        },
+        "eyes": {
+          "type": "string"
+        },
+        "hair": {
+          "type": "string"
+        },
+        "instagram": {
+          "type": "string"
+        },
+        "portfolioUrl": {
+          "type": "string"
+        },
+        "agency": {
+          "type": "string"
+        },
+        "releaseSigned": {
+          "type": "boolean"
+        },
+        "releaseSignedDate": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
