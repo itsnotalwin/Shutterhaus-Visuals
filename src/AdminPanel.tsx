@@ -26,6 +26,28 @@ const SA_LOCATIONS = [
 
 export let googleAccessToken: string | null = null;
 
+const fetchImageAsBase64 = async (url: string): Promise<string> => {
+  if (!url.startsWith('http')) return url;
+  try {
+    const headers: Record<string, string> = {};
+    if (url.includes('drive.google.com') && googleAccessToken) {
+      headers['Authorization'] = `Bearer ${googleAccessToken}`;
+    }
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.warn("Failed to fetch image as base64 client-side:", e);
+    return url; // Fallback to sending original URL
+  }
+};
+
 export default function AdminPanel() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -401,6 +423,8 @@ function PortfolioManager() {
         console.warn('Backend API failed or missing, attempting direct client-side Groq call...', err);
         if (!groqKey) throw new Error('Groq API Key is required for direct client-side calls.');
         
+        const finalImageUrl = await fetchImageAsBase64(imageUrl);
+        
         const completion = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -419,7 +443,7 @@ function PortfolioManager() {
                   },
                   {
                     type: "image_url",
-                    image_url: { url: imageUrl }
+                    image_url: { url: finalImageUrl }
                   }
                 ]
               }
@@ -553,6 +577,8 @@ function PortfolioManager() {
           console.warn('Backend API failed or missing, attempting direct client-side Groq call...', err);
           if (!groqKey) throw new Error('Groq API Key is required for direct client-side calls.');
           
+          const finalImageUrl = await fetchImageAsBase64(item.imageUrl);
+          
           const completion = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -571,7 +597,7 @@ function PortfolioManager() {
                     },
                     {
                       type: "image_url",
-                      image_url: { url: item.imageUrl }
+                      image_url: { url: finalImageUrl }
                     }
                   ]
                 }
