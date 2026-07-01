@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, MouseEvent, FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { flushSync } from "react-dom";
 import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
 import {
@@ -689,12 +690,12 @@ export default function App() {
               </a>
             </li>
             <li>
-              <a
-                href="/client"
+              <Link
+                to="/client"
                 className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors flex items-center gap-1"
               >
                 Client Portal
-              </a>
+              </Link>
             </li>
           </ul>
 
@@ -801,13 +802,13 @@ export default function App() {
                 </a>
               </li>
               <li>
-                <a
-                  href="/client"
+                <Link
+                  to="/client"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block py-1.5"
                 >
                   06 // Client Portal
-                </a>
+                </Link>
               </li>
             </ul>
           </motion.div>
@@ -1715,12 +1716,12 @@ export default function App() {
             </a>
           </li>
           <li>
-            <a
-              href="/admin"
+            <Link
+              to="/admin"
               className="hover:text-accent-light dark:hover:text-accent-dark"
             >
               Admin Login
-            </a>
+            </Link>
           </li>
         </ul>
       </footer>

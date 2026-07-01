@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { LogOut, Calendar, Clock, Camera } from 'lucide-react';
 import { auth, db } from './firebase';
@@ -72,7 +73,7 @@ export default function ClientPortal() {
             </svg>
             Sign In with Google
           </button>
-          <a href="/" className="block mt-4 text-[10px] font-mono tracking-widest uppercase hover:underline">Return to Home</a>
+          <Link to="/" className="block mt-4 text-[10px] font-mono tracking-widest uppercase hover:underline">Return to Home</Link>
         </div>
       </div>
     );
@@ -89,9 +90,9 @@ export default function ClientPortal() {
             </span>
           </div>
           <div className="flex items-center gap-6">
-            <a href="/" className="text-xs font-mono uppercase tracking-widest hover:text-accent-light dark:hover:text-accent-dark transition-colors">
+            <Link to="/" className="text-xs font-mono uppercase tracking-widest hover:text-accent-light dark:hover:text-accent-dark transition-colors">
               Main Site
-            </a>
+            </Link>
             <button 
               onClick={handleLogout}
               className="text-xs font-mono uppercase tracking-widest flex items-center gap-2 hover:text-accent-light dark:hover:text-accent-dark transition-colors"
