@@ -29,18 +29,62 @@ export let googleAccessToken: string | null = null;
 const fetchImageAsBase64 = async (url: string): Promise<string> => {
   if (!url.startsWith('http')) return url;
   try {
+    let fetchUrl = url;
     const headers: Record<string, string> = {};
+    
     if (url.includes('drive.google.com') && googleAccessToken) {
-      headers['Authorization'] = `Bearer ${googleAccessToken}`;
+      const match = url.match(/id=([^&]+)/);
+      if (match) {
+        fetchUrl = `https://www.googleapis.com/drive/v3/files/${match[1]}?alt=media`;
+        headers['Authorization'] = `Bearer ${googleAccessToken}`;
+      }
+    } else if (url.includes('lh3.googleusercontent.com') && googleAccessToken) {
+      const match = url.match(/\/d\/([^=]+)/);
+      if (match) {
+        fetchUrl = `https://www.googleapis.com/drive/v3/files/${match[1]}?alt=media`;
+        headers['Authorization'] = `Bearer ${googleAccessToken}`;
+      }
     }
-    const res = await fetch(url, { headers });
+
+    const res = await fetch(fetchUrl, { headers });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
+    
     return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 800;
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        } else {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        }
+        URL.revokeObjectURL(img.src);
+      };
+      img.onerror = () => {
+        reject(new Error("Failed to load image for resizing"));
+        URL.revokeObjectURL(img.src);
+      };
+      img.src = URL.createObjectURL(blob);
     });
   } catch (e) {
     console.warn("Failed to fetch image as base64 client-side:", e);
