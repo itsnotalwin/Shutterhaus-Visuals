@@ -24,32 +24,82 @@ const SA_LOCATIONS = [
   'Other'
 ];
 
-export let googleAccessToken: string | null = null;
+export let googleAccessToken: string | null = typeof window !== 'undefined' ? sessionStorage.getItem('googleAccessToken') : null;
+
+export const setGoogleAccessToken = (token: string | null) => {
+  googleAccessToken = token;
+  if (typeof window !== 'undefined') {
+    if (token) {
+      sessionStorage.setItem('googleAccessToken', token);
+    } else {
+      sessionStorage.removeItem('googleAccessToken');
+    }
+  }
+};
+
+const getGoogleDriveFileId = (url: string): string | null => {
+  if (!url.includes('drive.google.com') && !url.includes('googleusercontent.com')) return null;
+  
+  // Format: /file/d/FILE_ID/...
+  const fileDMatch = url.match(/\/file\/d\/([^/]+)/);
+  if (fileDMatch) return fileDMatch[1];
+  
+  // Format: id=FILE_ID
+  const idParamMatch = url.match(/[?&]id=([^&]+)/);
+  if (idParamMatch) return idParamMatch[1];
+  
+  // Format: /d/FILE_ID
+  const dMatch = url.match(/\/d\/([^/=]+)/);
+  if (dMatch) return dMatch[1];
+  
+  return null;
+};
 
 const fetchImageAsBase64 = async (url: string): Promise<string> => {
   if (!url.startsWith('http')) return url;
   try {
-    let fetchUrl = url;
-    const headers: Record<string, string> = {};
-    
-    if (url.includes('drive.google.com') && googleAccessToken) {
-      const match = url.match(/id=([^&]+)/);
-      if (match) {
-        fetchUrl = `https://www.googleapis.com/drive/v3/files/${match[1]}?alt=media`;
-        headers['Authorization'] = `Bearer ${googleAccessToken}`;
+    const fileId = getGoogleDriveFileId(url);
+    let blob: Blob | null = null;
+
+    if (fileId) {
+      // 1. If we have a token, try authorized fetch first
+      if (googleAccessToken) {
+        try {
+          const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+            headers: { 'Authorization': `Bearer ${googleAccessToken}` }
+          });
+          if (res.ok) {
+            blob = await res.blob();
+          } else {
+            console.warn(`Authorized fetch failed with status ${res.status}, falling back to public fetch`);
+          }
+        } catch (e) {
+          console.warn("Authorized fetch failed, falling back to public fetch:", e);
+        }
       }
-    } else if (url.includes('lh3.googleusercontent.com') && googleAccessToken) {
-      const match = url.match(/\/d\/([^=]+)/);
-      if (match) {
-        fetchUrl = `https://www.googleapis.com/drive/v3/files/${match[1]}?alt=media`;
-        headers['Authorization'] = `Bearer ${googleAccessToken}`;
+
+      // 2. If authorized fetch failed or was not possible (no token), try public CORS-friendly direct fetch
+      if (!blob) {
+        try {
+          const res = await fetch(`https://lh3.googleusercontent.com/d/${fileId}`);
+          if (res.ok) {
+            blob = await res.blob();
+          } else {
+            console.warn(`Public direct fetch failed with status ${res.status}`);
+          }
+        } catch (e) {
+          console.warn("Public direct fetch failed:", e);
+        }
       }
     }
 
-    const res = await fetch(fetchUrl, { headers });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const blob = await res.blob();
-    
+    // 3. Fallback to original URL fetch if no blob obtained yet
+    if (!blob) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      blob = await res.blob();
+    }
+
     return await new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -76,7 +126,7 @@ const fetchImageAsBase64 = async (url: string): Promise<string> => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result as string);
           reader.onerror = reject;
-          reader.readAsDataURL(blob);
+          reader.readAsDataURL(blob!);
         }
         URL.revokeObjectURL(img.src);
       };
@@ -84,7 +134,7 @@ const fetchImageAsBase64 = async (url: string): Promise<string> => {
         reject(new Error("Failed to load image for resizing"));
         URL.revokeObjectURL(img.src);
       };
-      img.src = URL.createObjectURL(blob);
+      img.src = URL.createObjectURL(blob!);
     });
   } catch (e) {
     console.warn("Failed to fetch image as base64 client-side:", e);
@@ -138,7 +188,7 @@ export default function AdminPanel() {
 
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential?.accessToken) {
-        googleAccessToken = credential.accessToken;
+        setGoogleAccessToken(credential.accessToken);
       }
     } catch (error: any) {
       console.error("Login failed", error);
@@ -148,6 +198,7 @@ export default function AdminPanel() {
 
   const handleLogout = async () => {
     try {
+      setGoogleAccessToken(null);
       await signOut(auth);
     } catch (error) {
       console.error("Logout failed", error);

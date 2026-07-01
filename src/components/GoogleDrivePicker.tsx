@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { googleAccessToken } from '../AdminPanel';
+import { googleAccessToken, setGoogleAccessToken } from '../AdminPanel';
 import { auth } from '../firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
@@ -42,6 +42,7 @@ export default function GoogleDrivePicker({ onPick, onPickMultiple, multiple = f
         const credential = GoogleAuthProvider.credentialFromResult(result);
         if (credential?.accessToken) {
           token = credential.accessToken;
+          setGoogleAccessToken(token);
         } else {
           throw new Error("No access token found");
         }
