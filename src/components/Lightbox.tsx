@@ -198,37 +198,40 @@ export default function Lightbox({ item, onClose, onNext, onPrev }: LightboxProp
               </div>
             </div>
 
-            {/* Photographic EXIF Data */}
-            <div className="mt-8 space-y-6">
-              <div className="flex items-center gap-2 text-xs font-mono tracking-wider text-[#fcfaf7]/50 uppercase border-b border-[#332d29]/50 pb-2">
+            {/* Photographic EXIF Data Card */}
+            <div className="mt-8 bg-[#242120]/30 border border-[#332d29] rounded p-5">
+              <div className="flex items-center gap-2 text-[10px] font-mono tracking-widest text-[#fcfaf7]/50 uppercase mb-5 border-b border-[#332d29]/50 pb-3">
                 <Camera className="w-3.5 h-3.5" />
-                <span>EXIF Specification</span>
+                <span>EXIF Data</span>
               </div>
 
-              <div className="space-y-3 font-mono text-[11px]">
-                <div className="flex justify-between">
-                  <span className="text-[#fcfaf7]/40 uppercase">Body:</span>
-                  <span className="text-[#fcfaf7]/90">{item.cameraSettings.camera}</span>
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                <div className="flex flex-col items-center justify-center p-2 bg-[#1a1817]/80 rounded border border-[#332d29]/40">
+                  <span className="text-[9px] tracking-widest text-[#fcfaf7]/40 uppercase font-mono mb-1">Aperture</span>
+                  <span className="text-sm font-medium text-[#fcfaf7]/90">{item.cameraSettings.aperture}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#fcfaf7]/40 uppercase">Optic:</span>
-                  <span className="text-[#fcfaf7]/90">{item.cameraSettings.lens}</span>
+                <div className="flex flex-col items-center justify-center p-2 bg-[#1a1817]/80 rounded border border-[#332d29]/40">
+                  <span className="text-[9px] tracking-widest text-[#fcfaf7]/40 uppercase font-mono mb-1">Shutter</span>
+                  <span className="text-sm font-medium text-[#fcfaf7]/90">{item.cameraSettings.shutterSpeed}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#fcfaf7]/40 uppercase">Aperture:</span>
-                  <span className="text-[#fcfaf7]/95 text-right font-medium">{item.cameraSettings.aperture}</span>
+                <div className="flex flex-col items-center justify-center p-2 bg-[#1a1817]/80 rounded border border-[#332d29]/40">
+                  <span className="text-[9px] tracking-widest text-[#fcfaf7]/40 uppercase font-mono mb-1">ISO</span>
+                  <span className="text-sm font-medium text-[#fcfaf7]/90">{item.cameraSettings.iso}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#fcfaf7]/40 uppercase">Shutter:</span>
-                  <span className="text-[#fcfaf7]/95 text-right font-medium">{item.cameraSettings.shutterSpeed}</span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center bg-[#1a1817]/80 p-2.5 rounded border border-[#332d29]/40">
+                  <span className="text-[9px] tracking-widest text-[#fcfaf7]/40 uppercase font-mono">Body</span>
+                  <span className="text-xs font-medium text-[#fcfaf7]/90">{item.cameraSettings.camera}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#fcfaf7]/40 uppercase">ISO:</span>
-                  <span className="text-[#fcfaf7]/95 text-right font-medium">{item.cameraSettings.iso}</span>
+                <div className="flex justify-between items-center bg-[#1a1817]/80 p-2.5 rounded border border-[#332d29]/40">
+                  <span className="text-[9px] tracking-widest text-[#fcfaf7]/40 uppercase font-mono">Lens</span>
+                  <span className="text-xs font-medium text-[#fcfaf7]/90">{item.cameraSettings.lens}</span>
                 </div>
-                <div className="flex justify-between border-t border-[#332d29]/50 pt-3 mt-1">
-                  <span className="text-[#fcfaf7]/40 uppercase">Print Medium:</span>
-                  <span className="text-[#fcfaf7]/80">{item.dimensions}</span>
+                <div className="flex justify-between items-center bg-[#1a1817]/80 p-2.5 rounded border border-[#332d29]/40">
+                  <span className="text-[9px] tracking-widest text-[#fcfaf7]/40 uppercase font-mono">Print Medium</span>
+                  <span className="text-xs font-medium text-[#fcfaf7]/80">{item.dimensions}</span>
                 </div>
               </div>
             </div>
