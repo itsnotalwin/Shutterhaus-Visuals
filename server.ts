@@ -70,7 +70,23 @@ async function startServer() {
       const content = completion.choices[0]?.message?.content;
       if (!content) throw new Error("No content returned from Groq");
 
-      const result = JSON.parse(content);
+      let result;
+      try {
+        result = JSON.parse(content);
+      } catch (e) {
+        console.warn("Failed to parse JSON directly, trying to extract from markdown...");
+        const match = content.match(/```(?:json)?\n([\s\S]*?)\n```/);
+        if (match) {
+          result = JSON.parse(match[1]);
+        } else {
+          const matchBraces = content.match(/\{[\s\S]*\}/);
+          if (matchBraces) {
+            result = JSON.parse(matchBraces[0]);
+          } else {
+            throw new Error(`Failed to parse Groq response as JSON. Response: ${content}`);
+          }
+        }
+      }
       res.json(result);
     } catch (error: any) {
       console.error("Groq generation error:", error);

@@ -6,6 +6,24 @@ import { v4 as uuidv4 } from 'uuid';
 import { Plus, Edit2, Trash2, X, Image as ImageIcon, Camera, Sparkles, Sliders, Check, RefreshCw } from 'lucide-react';
 import GoogleDrivePicker from './components/GoogleDrivePicker';
 
+const SA_LOCATIONS = [
+  'Johannesburg',
+  'Pretoria',
+  'Cape Town',
+  'Durban',
+  'KwaZulu-Natal',
+  'Port Elizabeth',
+  'Bloemfontein',
+  'Nelspruit',
+  'Kimberley',
+  'Polokwane',
+  'Rustenburg',
+  'East London',
+  'Stellenbosch',
+  'George',
+  'Other'
+];
+
 export let googleAccessToken: string | null = null;
 
 export default function AdminPanel() {
@@ -193,7 +211,7 @@ function PortfolioManager() {
     setTitle('');
     setCategory('editorial');
     setYear(new Date().getFullYear().toString());
-    setLocation('Studio A, Johannesburg');
+    setLocation('Johannesburg');
     setImageUrl('');
     setDescription('');
     setDimensions('4000x6000');
@@ -397,7 +415,7 @@ function PortfolioManager() {
       title: 'Pending AI Analysis...',
       category: 'editorial' as const,
       year: new Date().getFullYear().toString(),
-      location: 'Studio A, Johannesburg',
+      location: 'Johannesburg',
       description: '',
       camera: 'Canon EOS 4000D',
       lens: '18-85mm',
@@ -421,7 +439,7 @@ function PortfolioManager() {
         title: cleanTitle || 'Pending AI Analysis...',
         category: 'editorial' as const,
         year: new Date().getFullYear().toString(),
-        location: 'Studio A, Johannesburg',
+        location: 'Johannesburg',
         description: '',
         camera: 'Canon EOS 4000D',
         lens: '18-85mm',
@@ -892,13 +910,16 @@ function PortfolioManager() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-mono uppercase tracking-wider block font-bold">Studio / Location</label>
-                  <input 
-                    type="text"
-                    placeholder="Milano Studio A"
+                  <select 
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     className="w-full p-2.5 bg-white dark:bg-surface-1 border border-sand dark:border-dark-border text-xs focus:outline-none focus:border-accent-light dark:focus:border-accent-dark"
-                  />
+                  >
+                    <option value="" disabled>Select Location</option>
+                    {SA_LOCATIONS.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-mono uppercase tracking-wider block font-bold">Max Print Dimensions</label>
@@ -1208,12 +1229,16 @@ function PortfolioManager() {
 
                         <div className="col-span-6 md:col-span-3 space-y-1">
                           <label className="text-[9px] font-mono uppercase text-[#7c7265] dark:text-[#9a9088]">Location</label>
-                          <input
-                            type="text"
+                          <select
                             value={item.location}
                             onChange={(e) => handleUpdateBatchItemField(item.id, 'location', e.target.value)}
                             className="w-full p-2 bg-oatmeal/20 dark:bg-surface-1 border border-sand dark:border-dark-border text-xs focus:outline-none"
-                          />
+                          >
+                            <option value="" disabled>Select Location</option>
+                            {SA_LOCATIONS.map(loc => (
+                              <option key={loc} value={loc}>{loc}</option>
+                            ))}
+                          </select>
                         </div>
 
                         {/* EXIF Metadata Row */}
