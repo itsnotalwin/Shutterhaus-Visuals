@@ -566,6 +566,21 @@ function PortfolioManager() {
     }
   };
 
+  const clearPortfolio = async () => {
+    if (!window.confirm('Are you sure you want to completely clear the entire portfolio? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      for (const item of items) {
+        await deleteDoc(doc(db, 'portfolio', item.id));
+      }
+      alert('Portfolio cleared successfully.');
+    } catch (err) {
+      console.error('Failed to clear portfolio:', err);
+      alert('Failed to clear portfolio. Check console for details.');
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-5xl">
       <div className="border-b border-sand dark:border-dark-border pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -577,6 +592,14 @@ function PortfolioManager() {
         </div>
         
         <div className="flex gap-2 w-full md:w-auto flex-wrap">
+          <button 
+            onClick={clearPortfolio}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-red-500/50 hover:bg-red-500/10 text-[10px] font-mono uppercase tracking-wider text-red-500 transition-colors"
+          >
+            <Trash2 className="w-3 h-3" />
+            <span>Clear Portfolio</span>
+          </button>
+
           <button 
             onClick={preseedCuratedCollection}
             className="flex items-center gap-1.5 px-3 py-1.5 border border-sand dark:border-dark-border hover:bg-sand/20 dark:hover:bg-surface-2 text-[10px] font-mono uppercase tracking-wider text-[#7c7265] dark:text-[#9a9088]"
