@@ -344,6 +344,8 @@ export default function App() {
             (doc) => doc.data() as PortfolioItem,
           );
           setPortfolio(firestorePortfolio);
+        } else {
+          setPortfolio([]);
         }
       },
       (error) => {
