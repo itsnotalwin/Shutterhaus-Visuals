@@ -17,7 +17,6 @@ export default function AdminPanel() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        // Direct bootstrap bypass for itsnotalwin@gmail.com
         if (currentUser.email === 'itsnotalwin@gmail.com') {
           setIsAdmin(true);
           // Silently register/ensure admin record exists in DB in background
@@ -31,28 +30,8 @@ export default function AdminPanel() {
             // Silently swallow errors here so as not to pollute the console
           }
         } else {
-          try {
-            const adminDoc = await getDoc(doc(db, 'admins', currentUser.uid));
-            if (adminDoc.exists()) {
-              setIsAdmin(true);
-            } else {
-              // Self-assign admin for testing/demo purposes
-              try {
-                await setDoc(doc(db, 'admins', currentUser.uid), {
-                  email: currentUser.email,
-                  role: 'admin',
-                  bootstrapped: true
-                });
-                setIsAdmin(true);
-              } catch (writeErr) {
-                console.warn("Could not write admin doc, using fallback state for preview", writeErr);
-                setIsAdmin(true);
-              }
-            }
-          } catch (error) {
-            console.error("Admin check failed", error);
-            setIsAdmin(true); // Fallback for preview demo purposes
-          }
+          // Reject anyone else
+          setIsAdmin(false);
         }
       } else {
         setIsAdmin(false);
@@ -66,12 +45,20 @@ export default function AdminPanel() {
     provider.addScope('https://www.googleapis.com/auth/drive.readonly');
     try {
       const result = await signInWithPopup(auth, provider);
+      
+      if (result.user.email !== 'itsnotalwin@gmail.com') {
+        alert("Unauthorized. Only itsnotalwin@gmail.com is allowed as admin.");
+        await signOut(auth);
+        return;
+      }
+
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential?.accessToken) {
         googleAccessToken = credential.accessToken;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed", error);
+      alert("Login failed: " + error.message + "\n\nMake sure to add this domain to Firebase Console Authorized Domains!");
     }
   };
 

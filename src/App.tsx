@@ -30,6 +30,8 @@ import Lightbox from "./components/Lightbox";
 import ImageUploader from "./components/ImageUploader";
 import BookingCalendar from "./components/BookingCalendar";
 import { ShutterhausLogo } from "./components/ShutterhausLogo";
+import { StartupScreen } from "./components/StartupScreen";
+import { ResponsiveImage } from "./components/ResponsiveImage";
 import { paintArtOnCanvas } from "./utils/paintArt";
 import { db } from "./firebase";
 import {
@@ -621,6 +623,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-oatmeal dark:bg-cocoa text-espresso dark:text-alabaster relative transition-colors duration-500 pb-12 overflow-x-hidden">
+      <StartupScreen />
       {/* Subtle photography film grain texture */}
       <div className="film-grain" />
 
@@ -683,6 +686,14 @@ export default function App() {
                 className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors"
               >
                 Contact
+              </a>
+            </li>
+            <li>
+              <a
+                href="/client"
+                className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors flex items-center gap-1"
+              >
+                Client Portal
               </a>
             </li>
           </ul>
@@ -787,6 +798,15 @@ export default function App() {
                   className="block py-1.5 border-b border-sand/30 dark:border-dark-border/30"
                 >
                   05 // Bookings
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/client"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block py-1.5"
+                >
+                  06 // Client Portal
                 </a>
               </li>
             </ul>
@@ -1060,16 +1080,11 @@ export default function App() {
                     />
 
                     {/* Loaded Unsplash/Custom image */}
-                    <img
-                      src={item.imageUrl}
+                    <ResponsiveImage
+                      src={item.imageUrl || ''}
                       alt={item.title}
-                      referrerPolicy="no-referrer"
-                      className={`absolute inset-0 w-full h-full object-cover transition-all duration-[900ms] ease-expo filter grayscale contrast-[1.05] group-hover:scale-105 group-hover:grayscale-0 group-hover:contrast-100 opacity-0`}
-                      onLoad={(e) => {
-                        const img = e.currentTarget;
-                        img.classList.remove("opacity-0");
-                        img.classList.add("opacity-100");
-                      }}
+                      title={`${item.title} - ${item.cameraSettings?.camera} ${item.cameraSettings?.lens} - ${item.cameraSettings?.aperture} ${item.cameraSettings?.shutterSpeed} ISO ${item.cameraSettings?.iso}`}
+                      className="absolute inset-0 w-full h-full object-cover transition-all duration-[900ms] ease-expo filter grayscale contrast-[1.05] group-hover:scale-105 group-hover:grayscale-0 group-hover:contrast-100"
                     />
 
                     {/* Delete action for custom uploaded photographs */}
@@ -1144,12 +1159,11 @@ export default function App() {
       >
         {/* Curved portrait wrap */}
         <div className="lg:col-span-5 relative group overflow-hidden border border-sand dark:border-dark-border aspect-[3/4] bg-oatmeal dark:bg-surface-2">
-          <img
+          <ResponsiveImage
             src="/alwin.jpg"
             alt="Lead photographer Alwin"
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover filter grayscale contrast-110 sepia-[0.1] transition-transform duration-1000 ease-out group-hover:scale-[1.03]"
-            onError={(e) => {
+            className="w-full h-full object-cover filter grayscale contrast-110 sepia-[0.1] group-hover:scale-[1.03]"
+            onError={(e: any) => {
               (e.target as HTMLImageElement).src =
                 "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?q=80&w=800&auto=format&fit=crop";
             }}
