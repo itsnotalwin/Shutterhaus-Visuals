@@ -88,7 +88,7 @@ export default function TeamSection() {
               {/* Dynamic Pexels photo */}
               {(isLoaded || m.id === 'alwin') && (
                 <img
-                  src={m.id === 'alwin' ? '/alwin.jpg' : images[m.id]}
+                  src={m.id === 'alwin' ? 'https://drive.google.com/thumbnail?id=1dGo1hDouUsBn3CLQsB5cz-Ji40wzxgAI&sz=w1000' : images[m.id]}
                   alt={m.name}
                   referrerPolicy="no-referrer"
                   className="absolute inset-0 w-full h-full object-cover filter grayscale sepia-[0.2] saturate-[0.9] contrast-[1.02] brightness-[0.95] transition-all duration-1000 ease-out group-hover:scale-[1.04] group-hover:grayscale-0 group-hover:sepia-0 group-hover:saturate-100"

@@ -1163,7 +1163,7 @@ export default function App() {
         {/* Curved portrait wrap */}
         <div className="lg:col-span-5 relative group overflow-hidden border border-sand dark:border-dark-border aspect-[3/4] bg-oatmeal dark:bg-surface-2">
           <ResponsiveImage
-            src="/alwin.jpg"
+            src="https://drive.google.com/thumbnail?id=1dGo1hDouUsBn3CLQsB5cz-Ji40wzxgAI&sz=w1000"
             alt="Lead photographer Alwin"
             className="w-full h-full object-cover filter grayscale contrast-110 sepia-[0.1] group-hover:scale-[1.03]"
             onError={(e: any) => {
