@@ -10,7 +10,21 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  app.use(express.json({ limit: '200mb' }));
+  app.use(express.urlencoded({ limit: '200mb', extended: true }));
+
+  // Handle JSON parsing errors
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (err instanceof SyntaxError && 'status' in err && err.status === 400 && 'body' in err) {
+      console.error('Bad JSON in request body');
+      return res.status(400).json({ error: 'Invalid JSON payload' });
+    }
+    if (err.type === 'entity.too.large') {
+      console.error('Payload too large');
+      return res.status(413).json({ error: 'Payload too large' });
+    }
+    next(err);
+  });
 
   app.post("/api/groq-generate", async (req, res) => {
     try {

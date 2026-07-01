@@ -378,15 +378,76 @@ function PortfolioManager() {
     if (!imageUrl) return;
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/groq-generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl, groqApiKey: groqKey, googleAccessToken })
-      });
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate metadata');
+      let data;
+      try {
+        const response = await fetch('/api/groq-generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrl, groqApiKey: groqKey, googleAccessToken })
+        });
+        
+        // If static host (like GitHub Pages) returns 405 Method Not Allowed, or 404, fallback to client-side call
+        if (response.status === 405 || response.status === 404) {
+          throw new Error('Backend not available');
+        }
+        
+        data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to generate metadata');
+        }
+      } catch (err: any) {
+        // Fallback: Call Groq API directly from the client if backend is missing
+        console.warn('Backend API failed or missing, attempting direct client-side Groq call...', err);
+        if (!groqKey) throw new Error('Groq API Key is required for direct client-side calls.');
+        
+        const completion = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${groqKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: "meta-llama/llama-4-scout-17b-16e-instruct",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: "Analyze this image and return a JSON object with a suitable title, category (must be exactly one of: 'portrait', 'boudoir', 'family', 'event', 'editorial'), and a short 1-2 sentence description for a fine-art photography portfolio. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\" }"
+                  },
+                  {
+                    type: "image_url",
+                    image_url: { url: imageUrl }
+                  }
+                ]
+              }
+            ],
+            response_format: { type: "json_object" }
+          })
+        });
+        
+        if (!completion.ok) {
+           const errData = await completion.json();
+           throw new Error(errData.error?.message || 'Direct Groq API call failed');
+        }
+        
+        const completionData = await completion.json();
+        const content = completionData.choices[0]?.message?.content;
+        
+        try {
+          data = JSON.parse(content);
+        } catch (e) {
+          const match = content.match(/```(?:json)?\n([\s\S]*?)\n```/);
+          if (match) {
+            data = JSON.parse(match[1]);
+          } else {
+            const matchBraces = content.match(/\{[\s\S]*\}/);
+            if (matchBraces) data = JSON.parse(matchBraces[0]);
+            else throw new Error('Failed to parse fallback Groq response');
+          }
+        }
       }
 
       if (data.title) setTitle(data.title);
@@ -468,19 +529,77 @@ function PortfolioManager() {
       setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'analyzing' } : i));
 
       try {
-        const response = await fetch('/api/groq-generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            imageUrl: item.imageUrl,
-            groqApiKey: groqKey,
-            googleAccessToken
-          })
-        });
-        const data = await response.json();
+        let data;
+        try {
+          const response = await fetch('/api/groq-generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageUrl: item.imageUrl,
+              groqApiKey: groqKey,
+              googleAccessToken
+            })
+          });
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to analyze');
+          if (response.status === 405 || response.status === 404) {
+             throw new Error('Backend not available');
+          }
+
+          data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to analyze');
+          }
+        } catch (err: any) {
+          console.warn('Backend API failed or missing, attempting direct client-side Groq call...', err);
+          if (!groqKey) throw new Error('Groq API Key is required for direct client-side calls.');
+          
+          const completion = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${groqKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: "meta-llama/llama-4-scout-17b-16e-instruct",
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Analyze this image and return a JSON object with a suitable title, category (must be exactly one of: 'portrait', 'boudoir', 'family', 'event', 'editorial'), and a short 1-2 sentence description for a fine-art photography portfolio. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\" }"
+                    },
+                    {
+                      type: "image_url",
+                      image_url: { url: item.imageUrl }
+                    }
+                  ]
+                }
+              ],
+              response_format: { type: "json_object" }
+            })
+          });
+          
+          if (!completion.ok) {
+             const errData = await completion.json();
+             throw new Error(errData.error?.message || 'Direct Groq API call failed');
+          }
+          
+          const completionData = await completion.json();
+          const content = completionData.choices[0]?.message?.content;
+          
+          try {
+            data = JSON.parse(content);
+          } catch (e) {
+            const match = content.match(/```(?:json)?\n([\s\S]*?)\n```/);
+            if (match) {
+              data = JSON.parse(match[1]);
+            } else {
+              const matchBraces = content.match(/\{[\s\S]*\}/);
+              if (matchBraces) data = JSON.parse(matchBraces[0]);
+              else throw new Error('Failed to parse fallback Groq response');
+            }
+          }
         }
 
         setBatchItems(prev => prev.map(i => i.id === item.id ? {
