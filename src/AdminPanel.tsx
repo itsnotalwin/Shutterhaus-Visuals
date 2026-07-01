@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { collection, getDocs, doc, setDoc, deleteDoc, query, onSnapshot, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc, query, onSnapshot, getDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus, Edit2, Trash2, X, Image as ImageIcon, Camera, Sparkles, Sliders, Check, RefreshCw } from 'lucide-react';
 import GoogleDrivePicker from './components/GoogleDrivePicker';
@@ -571,9 +571,13 @@ function PortfolioManager() {
       return;
     }
     try {
-      for (const item of items) {
-        await deleteDoc(doc(db, 'portfolio', item.id));
-      }
+      const q = query(collection(db, 'portfolio'));
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      snapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
       alert('Portfolio cleared successfully.');
     } catch (err) {
       console.error('Failed to clear portfolio:', err);
