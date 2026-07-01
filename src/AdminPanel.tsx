@@ -61,44 +61,96 @@ const fetchImageAsBase64 = async (url: string): Promise<string> => {
     const fileId = getGoogleDriveFileId(url);
     let blob: Blob | null = null;
 
+    // 1. If it's a Google Drive file, try our specialized Google Drive fetching paths first
     if (fileId) {
-      // 1. If we have a token, try authorized fetch first
-      if (googleAccessToken) {
+      // 1a. Try public direct fetch via corsproxy.io (extremely reliable)
+      try {
+        const corsProxyUrl = `https://corsproxy.io/?` + encodeURIComponent(`https://lh3.googleusercontent.com/d/${fileId}`);
+        const res = await fetch(corsProxyUrl);
+        if (res.ok) {
+          blob = await res.blob();
+        }
+      } catch (e) {
+        console.warn("Public direct fetch via corsproxy.io failed, trying other methods...", e);
+      }
+
+      // 1b. Try public direct fetch via allorigins.win (backup CORS proxy)
+      if (!blob) {
+        try {
+          const allOriginsUrl = `https://api.allorigins.win/raw?url=` + encodeURIComponent(`https://lh3.googleusercontent.com/d/${fileId}`);
+          const res = await fetch(allOriginsUrl);
+          if (res.ok) {
+            blob = await res.blob();
+          }
+        } catch (e) {
+          console.warn("Public direct fetch via allorigins.win failed...", e);
+        }
+      }
+
+      // 1c. If we have a token, try authorized fetch
+      if (!blob && googleAccessToken) {
         try {
           const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
             headers: { 'Authorization': `Bearer ${googleAccessToken}` }
           });
           if (res.ok) {
             blob = await res.blob();
-          } else {
-            console.warn(`Authorized fetch failed with status ${res.status}, falling back to public fetch`);
           }
         } catch (e) {
-          console.warn("Authorized fetch failed, falling back to public fetch:", e);
+          console.warn("Authorized fetch failed:", e);
         }
       }
 
-      // 2. If authorized fetch failed or was not possible (no token), try public CORS-friendly direct fetch
+      // 1d. Try public direct fetch without proxy (just in case)
       if (!blob) {
         try {
           const res = await fetch(`https://lh3.googleusercontent.com/d/${fileId}`);
           if (res.ok) {
             blob = await res.blob();
-          } else {
-            console.warn(`Public direct fetch failed with status ${res.status}`);
           }
         } catch (e) {
-          console.warn("Public direct fetch failed:", e);
+          console.warn("Public direct fetch without proxy failed:", e);
         }
       }
     }
 
-    // 3. Fallback to original URL fetch if no blob obtained yet
+    // 2. Fallback to normal fetch or proxy fetch for other URLs (like Unsplash or generic URLs)
     if (!blob) {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      blob = await res.blob();
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          blob = await res.blob();
+        } else {
+          throw new Error(`HTTP ${res.status}`);
+        }
+      } catch (err) {
+        console.warn("Direct fetch failed, trying corsproxy.io for fallback...", err);
+        // Try corsproxy.io
+        try {
+          const res = await fetch(`https://corsproxy.io/?` + encodeURIComponent(url));
+          if (res.ok) {
+            blob = await res.blob();
+          } else {
+            throw new Error(`Proxy HTTP ${res.status}`);
+          }
+        } catch (proxyErr) {
+          console.warn("corsproxy.io fallback failed, trying allorigins.win...", proxyErr);
+          // Try allorigins.win
+          try {
+            const res = await fetch(`https://api.allorigins.win/raw?url=` + encodeURIComponent(url));
+            if (res.ok) {
+              blob = await res.blob();
+            } else {
+              throw new Error(`Allorigins HTTP ${res.status}`);
+            }
+          } catch (aoErr) {
+            console.warn("allorigins.win fallback failed as well:", aoErr);
+          }
+        }
+      }
     }
+
+    if (!blob) throw new Error("Failed to retrieve image content from all sources.");
 
     return await new Promise((resolve, reject) => {
       const img = new Image();
