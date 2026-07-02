@@ -49,6 +49,21 @@ export default function BookingCalendar({
   const [lastBookingId, setLastBookingId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
+  // Keep track of bookings made in this browser session/device to prevent privacy leaks
+  const [myBookingIds, setMyBookingIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('shutterhaus_my_booking_ids');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return [];
+      }
+    }
+    return ['book-preseed-1']; // Pre-seed with the initial professional booking
+  });
+
+  const mySessions = bookings.filter(b => myBookingIds.includes(b.id));
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -72,21 +87,97 @@ export default function BookingCalendar({
     days.push(new Date(year, month, i));
   }
 
+  const [gcalEvents, setGcalEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('googleAccessToken') : null;
+    if (token) {
+      const fetchGcal = async () => {
+        try {
+          const res = await fetch(
+            `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${new Date().toISOString()}&orderBy=startTime&singleEvents=true&maxResults=50`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            setGcalEvents(data.items || []);
+          }
+        } catch (err) {
+          console.warn("BookingCalendar: Failed to fetch GCal events:", err);
+        }
+      };
+      fetchGcal();
+    }
+  }, [bookings]);
+
+  const parseSlotToTimes = (date: Date, slotTime: string) => {
+    try {
+      const year = date.getFullYear();
+      const monthIndex = date.getMonth();
+      const day = date.getDate();
+      
+      const timeParts = slotTime.split(' ');
+      const hhmm = timeParts[0].split(':');
+      let hour = parseInt(hhmm[0], 10);
+      const min = hhmm[1] ? parseInt(hhmm[1], 10) : 0;
+      const ampm = timeParts[1] ? timeParts[1].toUpperCase() : 'AM';
+      
+      if (ampm === 'PM' && hour < 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+      
+      const startDate = new Date(year, monthIndex, day, hour, min, 0);
+      const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // 2 hours
+      
+      return {
+        start: startDate.toISOString(),
+        end: endDate.toISOString()
+      };
+    } catch (e) {
+      return null;
+    }
+  };
+
   const isSlotBlocked = (date: Date, slotTime: string) => {
     const dateString = date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
-    return bookings.some(b => 
+    
+    // Check local Firestore bookings
+    const isBookedInFirestore = bookings.some(b => 
       b.date === dateString && 
-      b.timeSlot === slotTime && 
-      (b.status === 'Confirmed' || 
-       b.rawStatus === 'approved' || 
-       b.rawStatus === 'shooting' || 
-       b.rawStatus === 'retouching' || 
-       b.rawStatus === 'delivered')
+      b.timeSlot === slotTime
     );
+    
+    if (isBookedInFirestore) return true;
+
+    // Check Google Calendar events if they overlap
+    if (gcalEvents && gcalEvents.length > 0) {
+      const slotTimes = parseSlotToTimes(date, slotTime);
+      if (slotTimes) {
+        const slotStart = new Date(slotTimes.start).getTime();
+        const slotEnd = new Date(slotTimes.end).getTime();
+
+        return gcalEvents.some(event => {
+          const eventStartStr = event.start?.dateTime || event.start?.date;
+          const eventEndStr = event.end?.dateTime || event.end?.date;
+          if (!eventStartStr || !eventEndStr) return false;
+
+          const eventStart = new Date(eventStartStr).getTime();
+          const eventEnd = new Date(eventEndStr).getTime();
+
+          // Overlap check
+          return (slotStart < eventEnd) && (slotEnd > eventStart);
+        });
+      }
+    }
+
+    return false;
   };
 
   // Determine availability status deterministically based on date
@@ -117,29 +208,12 @@ export default function BookingCalendar({
       return { label: '1 Slot Available', color: 'text-accent-light dark:text-accent-dark bg-accent-light/10 border-accent-light/20', status: 'limited' };
     }
 
-    const dayOfWeek = date.getDay(); // 0 is Sunday, 6 is Saturday
-    const dayOfMonth = date.getDate();
-
-    // Specific bookings count
-    const existingBookings = bookings.filter(b => b.date === dateString);
-    if (existingBookings.length >= 2 || blockedSlotsCount >= 2) {
-      return { label: 'Fully Booked', color: 'text-red-500 bg-red-500/10 border-red-500/20', status: 'booked' };
+    if (blockedSlotsCount === 2) {
+      return { label: '2 Slots Available', color: 'text-accent-light dark:text-accent-dark bg-accent-light/10 border-accent-light/20', status: 'limited' };
     }
 
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-      // Weekends are highly requested
-      if (dayOfMonth % 3 === 0) {
-        return { label: 'Fully Booked', color: 'text-red-500 bg-red-500/10 border-red-500/20', status: 'booked' };
-      }
-      return { label: '1 Slot Available', color: 'text-accent-light dark:text-accent-dark bg-accent-light/10 border-accent-light/20', status: 'limited' };
-    }
-
-    // Weekdays
-    if (dayOfMonth % 5 === 0) {
-      return { label: 'Fully Booked', color: 'text-gray-400 dark:text-gray-600 bg-gray-500/5', status: 'booked' };
-    }
-    if (dayOfMonth % 4 === 0) {
-      return { label: '1 Slot Available', color: 'text-accent-light dark:text-accent-dark bg-accent-light/10 border-accent-light/20', status: 'limited' };
+    if (blockedSlotsCount === 1) {
+      return { label: '3 Slots Available', color: 'text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20', status: 'available' };
     }
 
     return { label: 'Available', color: 'text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20', status: 'available' };
@@ -184,10 +258,15 @@ export default function BookingCalendar({
       timeSlot: selectedTimeSlot,
       vision: vision.trim() || 'Custom fine-art session',
       timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' · ' + new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      status: 'Confirmed'
+      status: 'Pending Review',
+      rawStatus: 'pending'
     };
 
     onAddBooking(newBooking);
+    const updatedIds = [...myBookingIds, bookingId];
+    setMyBookingIds(updatedIds);
+    localStorage.setItem('shutterhaus_my_booking_ids', JSON.stringify(updatedIds));
+
     setLastBookingId(bookingId);
     setIsBookedSuccess(true);
     
@@ -195,6 +274,13 @@ export default function BookingCalendar({
     setName('');
     setEmail('');
     setVision('');
+  };
+
+  const handleCancelBooking = (id: string) => {
+    onDeleteBooking(id);
+    const updatedIds = myBookingIds.filter(item => item !== id);
+    setMyBookingIds(updatedIds);
+    localStorage.setItem('shutterhaus_my_booking_ids', JSON.stringify(updatedIds));
   };
 
   const activeSuccessBooking = bookings.find(b => b.id === lastBookingId);
@@ -208,7 +294,7 @@ export default function BookingCalendar({
           <span>Real-time Booking Assistant</span>
         </span>
         
-        {bookings.length > 0 && (
+        {mySessions.length > 0 && (
           <button
             type="button"
             onClick={() => setShowHistory(!showHistory)}
@@ -219,14 +305,14 @@ export default function BookingCalendar({
             }`}
           >
             <Ticket className="w-3.5 h-3.5" />
-            <span>My Confirmed Sessions ({bookings.length})</span>
+            <span>My Bookings ({mySessions.length})</span>
           </button>
         )}
       </div>
 
       {/* Booking History Drawer */}
       <AnimatePresence>
-        {showHistory && bookings.length > 0 && (
+        {showHistory && mySessions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -243,13 +329,13 @@ export default function BookingCalendar({
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-none">
-              {bookings.map((book) => (
+              {mySessions.map((book) => (
                 <div 
                   key={book.id} 
                   className="p-4 bg-[#ece2d0]/30 dark:bg-surface-2 border border-sand dark:border-dark-border text-[11px] font-mono space-y-3 relative group/booking hover:border-accent-light/40 dark:hover:border-accent-dark/40 transition-colors"
                 >
                   <button
-                    onClick={() => onDeleteBooking(book.id)}
+                    onClick={() => handleCancelBooking(book.id)}
                     className="absolute top-3 right-3 opacity-0 group-hover/booking:opacity-100 p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-hover"
                     title="Cancel Booking"
                   >
@@ -280,9 +366,18 @@ export default function BookingCalendar({
                     </p>
                   )}
 
-                  <div className="flex items-center gap-1 text-[9px] text-green-600 dark:text-green-400 font-bold uppercase">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    <span>Confirmed · Digital Pass Active</span>
+                  <div className="flex items-center gap-1 text-[9px] font-bold uppercase">
+                    {book.status === 'Confirmed' ? (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        <span className="text-green-600 dark:text-green-400">Confirmed · Digital Pass Active</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        <span className="text-amber-600 dark:text-amber-400">Pending Review · Vault Hold</span>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -306,13 +401,15 @@ export default function BookingCalendar({
 
             <div className="space-y-2">
               <span className="text-[10px] font-mono uppercase tracking-widest text-accent-light dark:text-accent-dark font-bold block">
-                Session Confirmed
+                {activeSuccessBooking.status === 'Confirmed' ? 'Session Confirmed' : 'Booking Requested'}
               </span>
               <h3 className="text-xl md:text-2xl font-serif italic text-espresso dark:text-alabaster">
-                We are locked in.
+                {activeSuccessBooking.status === 'Confirmed' ? 'We are locked in.' : 'Request Submitted.'}
               </h3>
               <p className="text-xs text-[#7c7265] dark:text-[#9a9088] font-sans max-w-sm mx-auto leading-relaxed">
-                Your bespoke photo shoot session has been secured in our schedule. A confirmation copy is saved in your offline portal logs.
+                {activeSuccessBooking.status === 'Confirmed'
+                  ? 'Your bespoke photo shoot session has been secured in our schedule. A confirmation copy is saved in your offline portal logs.'
+                  : 'Your bespoke photo shoot request has been submitted to the vault. Our admin will review and confirm your slot shortly.'}
               </p>
             </div>
 
@@ -351,7 +448,11 @@ export default function BookingCalendar({
               </div>
 
               <div className="border-t border-sand dark:border-dark-border/40 pt-2.5 flex justify-between items-center text-[9px] font-bold uppercase text-green-600 dark:text-green-400">
-                <span>STATUS: SECURED & GUARANTEED</span>
+                {activeSuccessBooking.status === 'Confirmed' ? (
+                  <span className="text-green-600 dark:text-green-400">STATUS: SECURED & GUARANTEED</span>
+                ) : (
+                  <span className="text-amber-600 dark:text-amber-400">STATUS: PENDING REVIEW</span>
+                )}
                 <span>Q3 2026 RELEASE</span>
               </div>
             </div>

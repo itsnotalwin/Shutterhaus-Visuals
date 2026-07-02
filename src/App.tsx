@@ -361,27 +361,25 @@ export default function App() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        if (!snapshot.empty) {
-          const firestoreBookings = snapshot.docs.map((doc) => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              name: data.clientName || data.name || "Anonymous Client",
-              email: data.clientEmail || data.email || "",
-              service: data.package || data.service || "Photography Session",
-              date: data.date || "",
-              timeSlot: data.time || data.timeSlot || "",
-              vision: data.vision || "",
-              timestamp: data.timestamp || "",
-              status:
-                data.status === "approved" || data.status === "Confirmed"
-                  ? "Confirmed"
-                  : "Pending Review",
-              rawStatus: data.status || "pending",
-            } as Booking;
-          });
-          setBookings(firestoreBookings);
-        }
+        const firestoreBookings = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.clientName || data.name || "Anonymous Client",
+            email: data.clientEmail || data.email || "",
+            service: data.package || data.service || "Photography Session",
+            date: data.date || "",
+            timeSlot: data.time || data.timeSlot || "",
+            vision: data.vision || "",
+            timestamp: data.timestamp || "",
+            status:
+              ["approved", "Confirmed", "shooting", "retouching", "delivered"].includes(data.status)
+                ? "Confirmed"
+                : "Pending Review",
+            rawStatus: data.status || "pending",
+          } as Booking;
+        });
+        setBookings(firestoreBookings);
       },
       (error) => {
         console.log("Using local bookings cache. Firestore error:", error);

@@ -3,7 +3,7 @@ import { auth, db } from './firebase';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { collection, getDocs, doc, setDoc, deleteDoc, query, onSnapshot, getDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import { Plus, Edit2, Trash2, X, Image as ImageIcon, Camera, Sparkles, Sliders, Check, RefreshCw } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Image as ImageIcon, Camera, Sparkles, Sliders, Check, RefreshCw, Calendar, Clock, ExternalLink, Link } from 'lucide-react';
 import GoogleDrivePicker from './components/GoogleDrivePicker';
 
 const SA_LOCATIONS = [
@@ -229,6 +229,7 @@ export default function AdminPanel() {
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/drive.readonly');
+    provider.addScope('https://www.googleapis.com/auth/calendar');
     try {
       const result = await signInWithPopup(auth, provider);
       
@@ -1647,6 +1648,29 @@ function PortfolioManager() {
 
 function BookingsManager() {
   const [bookings, setBookings] = useState<any[]>([]);
+  const [token, setToken] = useState<string | null>(typeof window !== 'undefined' ? sessionStorage.getItem('googleAccessToken') : null);
+  
+  // Google Calendar events state
+  const [gcalEvents, setGcalEvents] = useState<any[]>([]);
+  const [loadingGcal, setLoadingGcal] = useState(false);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+
+  // Edit Booking states
+  const [editingBooking, setEditingBooking] = useState<any | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editTime, setEditTime] = useState('');
+  const [editPackage, setEditPackage] = useState('');
+  const [editVision, setEditVision] = useState('');
+
+  // Quick Blockout states
+  const [quickSummary, setQuickSummary] = useState('');
+  const [quickDate, setQuickDate] = useState('');
+  const [quickTime, setQuickTime] = useState('09:00 AM');
+  const [quickDuration, setQuickDuration] = useState('2');
+  const [isAddingQuickEvent, setIsAddingQuickEvent] = useState(false);
 
   useEffect(() => {
     const q = query(collection(db, 'bookings'));
@@ -1659,6 +1683,54 @@ function BookingsManager() {
     return () => unsubscribe();
   }, []);
 
+  // Fetch GCal events if token exists
+  useEffect(() => {
+    if (token) {
+      fetchGcalEvents(token);
+    }
+  }, [token]);
+
+  const fetchGcalEvents = async (accessToken: string) => {
+    setLoadingGcal(true);
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${new Date().toISOString()}&orderBy=startTime&singleEvents=true&maxResults=15`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setGcalEvents(data.items || []);
+      } else {
+        console.warn("Failed to fetch Google Calendar events:", res.statusText);
+      }
+    } catch (err) {
+      console.error("Error fetching Google Calendar events:", err);
+    } finally {
+      setLoadingGcal(false);
+    }
+  };
+
+  const handleConnectGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/drive.readonly');
+    provider.addScope('https://www.googleapis.com/auth/calendar');
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        setGoogleAccessToken(credential.accessToken);
+        setToken(credential.accessToken);
+      }
+    } catch (error: any) {
+      console.error("Failed to connect Google Calendar", error);
+      alert("Connection failed: " + error.message);
+    }
+  };
+
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
     try {
       await updateDoc(doc(db, 'bookings', bookingId), {
@@ -1669,62 +1741,716 @@ function BookingsManager() {
     }
   };
 
-  const handleDeleteBooking = async (bookingId: string) => {
-    if (confirm("Are you sure you want to delete this booking inquire?")) {
-      try {
-        await deleteDoc(doc(db, 'bookings', bookingId));
-      } catch (error) {
-        console.error("Error deleting booking:", error);
-      }
+  const parseDateAndTime = (dateStr: string, timeSlotStr: string) => {
+    try {
+      const parts = dateStr.replace(/,/g, '').split(' ');
+      if (parts.length < 3) return null;
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const monthIndex = monthNames.findIndex(m => parts[0].startsWith(m));
+      const day = parseInt(parts[1], 10);
+      const year = parseInt(parts[2], 10);
+      
+      if (monthIndex === -1 || isNaN(day) || isNaN(year)) return null;
+      
+      const timeStr = timeSlotStr || "09:00 AM";
+      const timeParts = timeStr.split(' ');
+      const hhmm = timeParts[0].split(':');
+      let hour = parseInt(hhmm[0], 10);
+      const min = hhmm[1] ? parseInt(hhmm[1], 10) : 0;
+      const ampm = timeParts[1] ? timeParts[1].toUpperCase() : 'AM';
+      
+      if (ampm === 'PM' && hour < 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+      
+      const startDate = new Date(year, monthIndex, day, hour, min, 0);
+      const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // 2 hours shoot
+      
+      return {
+        start: startDate.toISOString(),
+        end: endDate.toISOString()
+      };
+    } catch (e) {
+      console.warn("Failed to parse date/time:", e);
+      return null;
     }
   };
 
+  const dateToInputFormat = (dateStr: string) => {
+    try {
+      const parts = dateStr.replace(/,/g, '').split(' ');
+      if (parts.length < 3) return '';
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const monthIndex = monthNames.findIndex(m => parts[0].startsWith(m));
+      if (monthIndex === -1) return '';
+      const day = parts[1].padStart(2, '0');
+      const year = parts[2];
+      const month = String(monthIndex + 1).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch {
+      return '';
+    }
+  };
+
+  const dateFromInputFormat = (inputVal: string) => {
+    if (!inputVal) return '';
+    const parts = inputVal.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const date = new Date(year, month, day);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+    const date = new Date(inputVal);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const syncBookingToGCal = async (booking: any) => {
+    if (!token) {
+      alert("Please connect Google Calendar first using the panel on the right.");
+      return;
+    }
+
+    const confirmed = window.confirm(`Create a Google Calendar event for ${booking.clientName}'s shoot?`);
+    if (!confirmed) return;
+
+    setSyncingId(booking.id);
+    const times = parseDateAndTime(booking.date, booking.time);
+    if (!times) {
+      alert("Invalid date or time format on this booking. Please 'Edit' the booking first to set a valid format.");
+      setSyncingId(null);
+      return;
+    }
+
+    try {
+      const eventBody = {
+        summary: `Shutterhaus Session: ${booking.package || 'Photography'} - ${booking.clientName}`,
+        location: 'Shutterhaus Visuals Studio',
+        description: `Client: ${booking.clientName}\nEmail: ${booking.clientEmail}\nPhone: ${booking.clientPhone || 'N/A'}\n\nClient Vision/Notes:\n${booking.vision || 'N/A'}\n\nSynced from Shutterhaus Admin Panel.`,
+        start: {
+          dateTime: times.start,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+        },
+        end: {
+          dateTime: times.end,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+        }
+      };
+
+      const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(eventBody)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Update Firestore booking with event ID
+        await updateDoc(doc(db, 'bookings', booking.id), {
+          gcalEventId: data.id,
+          gcalSynced: true
+        });
+        alert("Booking successfully synced to Google Calendar!");
+        fetchGcalEvents(token);
+      } else {
+        const errData = await res.json();
+        console.error("GCal Sync failed:", errData);
+        alert("Google Calendar Sync failed: " + (errData.error?.message || "Unknown error"));
+      }
+    } catch (e) {
+      console.error("GCal Sync error:", e);
+      alert("Google Calendar Sync error. Check console.");
+    } finally {
+      setSyncingId(null);
+    }
+  };
+
+  const deleteGCalEvent = async (eventId: string) => {
+    if (!token) return;
+    try {
+      await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      console.error("Error deleting Google Calendar event:", error);
+    }
+  };
+
+  const handleUnsyncGCal = async (booking: any) => {
+    if (!token) return;
+    const confirmed = window.confirm("Are you sure you want to remove this booking's Google Calendar event? This deletes the event from Google Calendar.");
+    if (!confirmed) return;
+
+    setSyncingId(booking.id);
+    try {
+      await deleteGCalEvent(booking.gcalEventId);
+      await updateDoc(doc(db, 'bookings', booking.id), {
+        gcalEventId: null,
+        gcalSynced: false
+      });
+      alert("Unsynced and removed event from Google Calendar.");
+      fetchGcalEvents(token);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSyncingId(null);
+    }
+  };
+
+  const handleDeleteBooking = async (booking: any) => {
+    const confirmed = confirm(`Are you sure you want to delete the booking for ${booking.clientName}? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      if (booking.gcalEventId && token) {
+        const deleteGCal = confirm("This booking is synced with Google Calendar. Delete the Google Calendar event too?");
+        if (deleteGCal) {
+          await deleteGCalEvent(booking.gcalEventId);
+        }
+      }
+      await deleteDoc(doc(db, 'bookings', booking.id));
+      if (token) fetchGcalEvents(token);
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+    }
+  };
+
+  const handleEditClick = (booking: any) => {
+    setEditingBooking(booking);
+    setEditName(booking.clientName || '');
+    setEditEmail(booking.clientEmail || '');
+    setEditPhone(booking.clientPhone || '');
+    setEditDate(dateToInputFormat(booking.date || ''));
+    setEditTime(booking.time || '09:00 AM');
+    setEditPackage(booking.package || 'Portrait Fine Art Session');
+    setEditVision(booking.vision || '');
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBooking) return;
+
+    try {
+      const finalDate = dateFromInputFormat(editDate) || editingBooking.date;
+      const updatedFields: any = {
+        clientName: editName,
+        clientEmail: editEmail,
+        clientPhone: editPhone,
+        date: finalDate,
+        time: editTime,
+        package: editPackage,
+        vision: editVision
+      };
+
+      await updateDoc(doc(db, 'bookings', editingBooking.id), updatedFields);
+
+      // Ask to update in Google Calendar if synced
+      if (editingBooking.gcalEventId && token) {
+        const updateGcal = confirm("Booking updated in database! This booking is linked to Google Calendar. Update Google Calendar too?");
+        if (updateGcal) {
+          const times = parseDateAndTime(finalDate, editTime);
+          if (times) {
+            const eventBody = {
+              summary: `Shutterhaus Session: ${editPackage} - ${editName}`,
+              location: 'Shutterhaus Visuals Studio',
+              description: `Client: ${editName}\nEmail: ${editEmail}\nPhone: ${editPhone || 'N/A'}\n\nClient Vision/Notes:\n${editVision || 'N/A'}\n\nSynced from Shutterhaus Admin Panel.`,
+              start: {
+                dateTime: times.start,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+              },
+              end: {
+                dateTime: times.end,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+              }
+            };
+
+            const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${editingBooking.gcalEventId}`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(eventBody)
+            });
+
+            if (res.ok) {
+              alert("Successfully updated Google Calendar event!");
+              fetchGcalEvents(token);
+            } else {
+              console.warn("Failed to update GCal event:", res.statusText);
+            }
+          }
+        }
+      }
+
+      setEditingBooking(null);
+    } catch (error) {
+      console.error("Error updating booking:", error);
+      alert("Error saving: " + error);
+    }
+  };
+
+  const handleQuickAddEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) {
+      alert("Connect Google Calendar first.");
+      return;
+    }
+    if (!quickSummary || !quickDate) {
+      alert("Please enter a summary and a date.");
+      return;
+    }
+
+    setIsAddingQuickEvent(true);
+    try {
+      const dateParts = quickDate.split('-');
+      if (dateParts.length < 3) throw new Error("Invalid date");
+      const year = parseInt(dateParts[0], 10);
+      const monthIndex = parseInt(dateParts[1], 10) - 1;
+      const day = parseInt(dateParts[2], 10);
+
+      const timeParts = quickTime.split(' ');
+      const hhmm = timeParts[0].split(':');
+      let hour = parseInt(hhmm[0], 10);
+      const min = hhmm[1] ? parseInt(hhmm[1], 10) : 0;
+      const ampm = timeParts[1] ? timeParts[1].toUpperCase() : 'AM';
+
+      if (ampm === 'PM' && hour < 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+
+      const startDate = new Date(year, monthIndex, day, hour, min, 0);
+      const durationHours = parseFloat(quickDuration) || 2;
+      const endDate = new Date(startDate.getTime() + durationHours * 60 * 60 * 1000);
+
+      const eventBody = {
+        summary: quickSummary,
+        location: 'Shutterhaus Visuals Studio',
+        description: 'Scheduled directly from Shutterhaus Admin Panel.',
+        start: {
+          dateTime: startDate.toISOString(),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+        },
+        end: {
+          dateTime: endDate.toISOString(),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+        }
+      };
+
+      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(eventBody)
+      });
+
+      if (res.ok) {
+        alert("Blockout event added to Google Calendar!");
+        setQuickSummary('');
+        setQuickDate('');
+        fetchGcalEvents(token);
+      } else {
+        const errData = await res.json();
+        alert("Failed to add event: " + (errData.error?.message || "Unknown error"));
+      }
+    } catch (err: any) {
+      alert("Error adding event: " + err.message);
+    } finally {
+      setIsAddingQuickEvent(false);
+    }
+  };
+
+  const formatGCalDate = (event: any) => {
+    const start = event.start?.dateTime || event.start?.date;
+    if (!start) return '';
+    const d = new Date(start);
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
-    <div className="space-y-6 max-w-4xl">
-      <h2 className="text-lg font-serif font-light">Booking Inquiries</h2>
-      <div className="space-y-4">
-        {bookings.map(booking => (
-          <div key={booking.id} className="border border-sand dark:border-dark-border p-5 bg-white dark:bg-surface-1">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="font-bold text-base text-espresso dark:text-alabaster">{booking.clientName}</h3>
-                <p className="text-xs font-mono text-[#7c7265] dark:text-[#9a9088]">{booking.clientEmail} • {booking.clientPhone}</p>
+    <div className="space-y-8 max-w-7xl">
+      <div className="flex flex-col lg:flex-row gap-8">
+        
+        {/* Left Column: Shutterhaus Bookings */}
+        <div className="flex-1 space-y-6">
+          <div className="flex justify-between items-center border-b border-sand dark:border-dark-border pb-4">
+            <h2 className="text-xl font-serif font-light">Booking Inquiries</h2>
+            <span className="text-xs font-mono text-[#7c7265] dark:text-[#9a9088]">
+              {bookings.length} Total Records
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {bookings.map(booking => (
+              <div key={booking.id} className="border border-sand dark:border-dark-border p-5 bg-white dark:bg-surface-1 transition-all hover:border-sand-hover dark:hover:border-dark-border-hover">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-bold text-base text-espresso dark:text-alabaster">{booking.clientName}</h3>
+                    <p className="text-xs font-mono text-[#7c7265] dark:text-[#9a9088]">
+                      {booking.clientEmail} {booking.clientPhone ? `• ${booking.clientPhone}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select 
+                      value={booking.status || 'pending'} 
+                      onChange={(e) => handleStatusChange(booking.id, e.target.value)}
+                      className="bg-transparent border border-sand dark:border-dark-border py-1 px-2 text-[10px] font-mono text-espresso dark:text-alabaster uppercase rounded-none focus:outline-none focus:border-accent-light"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="shooting">Shooting</option>
+                      <option value="retouching">Retouching</option>
+                      <option value="delivered">Delivered</option>
+                    </select>
+
+                    <button 
+                      onClick={() => handleEditClick(booking)}
+                      className="p-1.5 border border-sand dark:border-dark-border text-[#7c7265] hover:text-espresso dark:hover:text-alabaster transition-colors"
+                      title="Edit/Fix Booking Details"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button 
+                      onClick={() => handleDeleteBooking(booking)}
+                      className="p-1.5 border border-sand dark:border-dark-border text-red-500 hover:bg-red-500/10 transition-colors"
+                      title="Delete booking"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono mt-2 py-3 border-t border-b border-sand/40 dark:border-dark-border/40">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-accent-light dark:text-accent-dark" />
+                    <span>{booking.date}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-accent-light dark:text-accent-dark" />
+                    <span>{booking.time || booking.timeSlot}</span>
+                  </div>
+                  <div className="truncate font-sans font-medium text-espresso/80 dark:text-alabaster/80">
+                    <span className="text-[#7c7265] dark:text-[#9a9088] font-mono text-xs">Package:</span> {booking.package}
+                  </div>
+                </div>
+
+                {booking.vision && (
+                  <div className="mt-3 p-3 bg-oatmeal/40 dark:bg-surface-2/40 border border-sand/40 dark:border-dark-border/40">
+                    <p className="text-[9px] text-[#7c7265] dark:text-[#9a9088] font-mono uppercase tracking-wider mb-1">Client Vision:</p>
+                    <p className="text-xs italic text-espresso/90 dark:text-alabaster/90 font-sans">"{booking.vision}"</p>
+                  </div>
+                )}
+
+                {/* Google Calendar Action for this Booking */}
+                <div className="mt-4 flex justify-between items-center text-xs pt-1">
+                  {booking.gcalSynced ? (
+                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-mono text-[11px]">
+                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                      <span>Linked with Google Calendar</span>
+                    </div>
+                  ) : (
+                    <span className="text-[#7c7265] font-mono text-[10px]">Not synced to Google Calendar</span>
+                  )}
+
+                  {booking.gcalSynced ? (
+                    <button
+                      disabled={syncingId === booking.id}
+                      onClick={() => handleUnsyncGCal(booking)}
+                      className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-600 text-[10px] font-mono uppercase tracking-wider border border-red-500/20"
+                    >
+                      {syncingId === booking.id ? 'Removing...' : 'Delete GCal Event'}
+                    </button>
+                  ) : (
+                    <button
+                      disabled={syncingId === booking.id}
+                      onClick={() => syncBookingToGCal(booking)}
+                      className="px-3 py-1 bg-accent-light/10 dark:bg-accent-dark/10 hover:bg-accent-light/20 dark:hover:bg-accent-dark/20 text-accent-light dark:text-accent-dark border border-accent-light/30 dark:border-accent-dark/30 text-[10px] font-mono uppercase tracking-widest flex items-center gap-1.5"
+                    >
+                      <Link className="w-3 h-3" />
+                      <span>{syncingId === booking.id ? 'Syncing...' : 'Sync to GCal'}</span>
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <select 
-                  value={booking.status || 'pending'} 
-                  onChange={(e) => handleStatusChange(booking.id, e.target.value)}
-                  className="bg-transparent border border-sand dark:border-dark-border py-1 px-2.5 text-xs font-mono text-espresso dark:text-alabaster uppercase rounded-none focus:outline-none focus:border-accent-light dark:focus:border-accent-dark"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="shooting">Shooting</option>
-                  <option value="retouching">Retouching</option>
-                  <option value="delivered">Delivered</option>
-                </select>
+            ))}
+            {bookings.length === 0 && <p className="text-xs text-[#7c7265] dark:text-[#9a9088] italic">No booking inquiries found in database.</p>}
+          </div>
+        </div>
+
+        {/* Right Column: Google Calendar Feed & Controls */}
+        <div className="w-full lg:w-[380px] space-y-6">
+          <div className="border border-sand dark:border-dark-border p-5 bg-white dark:bg-surface-1">
+            <h3 className="font-serif font-light text-base mb-4 border-b border-sand dark:border-dark-border pb-2 flex items-center justify-between">
+              <span>Google Calendar Feed</span>
+              {token && (
                 <button 
-                  onClick={() => handleDeleteBooking(booking.id)}
-                  className="text-xs font-mono uppercase tracking-widest text-red-500 hover:underline px-2 py-1"
+                  onClick={() => fetchGcalEvents(token)} 
+                  disabled={loadingGcal}
+                  className="p-1 text-[#7c7265] hover:text-espresso dark:hover:text-alabaster transition-colors disabled:opacity-50"
+                  title="Refresh Feed"
                 >
-                  Delete
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingGcal ? 'animate-spin' : ''}`} />
                 </button>
+              )}
+            </h3>
+
+            {token ? (
+              <div className="space-y-4">
+                <div className="p-3 bg-green-500/5 border border-green-500/20 text-[11px] font-mono text-green-700 dark:text-green-400 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span>Google Calendar Connected</span>
+                </div>
+
+                {/* Upcoming Events list */}
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-none">
+                  <p className="text-[10px] font-mono uppercase text-[#7c7265] dark:text-[#9a9088] tracking-widest">Upcoming Agenda</p>
+                  {gcalEvents.map(event => (
+                    <div key={event.id} className="p-3 bg-oatmeal/30 dark:bg-surface-2 border border-sand/40 dark:border-dark-border/40 text-xs">
+                      <p className="font-bold truncate text-espresso dark:text-alabaster">{event.summary}</p>
+                      <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#7c7265] dark:text-[#9a9088] mt-1">
+                        <Clock className="w-3 h-3" />
+                        <span>{formatGCalDate(event)}</span>
+                      </div>
+                      {event.location && (
+                        <p className="text-[10px] font-mono text-[#7c7265] dark:text-[#9a9088] truncate mt-0.5">📍 {event.location}</p>
+                      )}
+                    </div>
+                  ))}
+                  {gcalEvents.length === 0 && !loadingGcal && (
+                    <p className="text-xs text-[#7c7265] dark:text-[#9a9088] italic">No upcoming events found.</p>
+                  )}
+                  {loadingGcal && (
+                    <p className="text-xs text-[#7c7265] dark:text-[#9a9088] animate-pulse">Loading GCal schedule...</p>
+                  )}
+                </div>
+
+                {/* Quick block-out event builder */}
+                <form onSubmit={handleQuickAddEvent} className="border-t border-sand dark:border-dark-border pt-4 mt-4 space-y-3">
+                  <h4 className="text-[10px] font-mono uppercase text-[#7c7265] dark:text-[#9a9088] tracking-widest">Quick Block-Out / Event</h4>
+                  
+                  <div>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Blocked: Studio Maintenance" 
+                      value={quickSummary}
+                      onChange={(e) => setQuickSummary(e.target.value)}
+                      required
+                      className="w-full bg-transparent border border-sand dark:border-dark-border p-2 text-xs font-sans text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[9px] font-mono text-[#7c7265] mb-1">Date</label>
+                      <input 
+                        type="date" 
+                        value={quickDate}
+                        onChange={(e) => setQuickDate(e.target.value)}
+                        required
+                        className="w-full bg-transparent border border-sand dark:border-dark-border p-1.5 text-xs font-mono text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-mono text-[#7c7265] mb-1">Time</label>
+                      <select 
+                        value={quickTime}
+                        onChange={(e) => setQuickTime(e.target.value)}
+                        className="w-full bg-transparent border border-sand dark:border-dark-border p-1.5 text-xs font-mono text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
+                      >
+                        <option value="09:00 AM">09:00 AM</option>
+                        <option value="11:30 AM">11:30 AM</option>
+                        <option value="02:00 PM">02:00 PM</option>
+                        <option value="04:30 PM">04:30 PM</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-mono text-[#7c7265] mb-1">Duration (Hours)</label>
+                    <input 
+                      type="number" 
+                      min="0.5" 
+                      step="0.5" 
+                      value={quickDuration}
+                      onChange={(e) => setQuickDuration(e.target.value)}
+                      className="w-full bg-transparent border border-sand dark:border-dark-border p-1.5 text-xs font-mono text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
+                    />
+                  </div>
+
+                  <button 
+                    type="submit"
+                    disabled={isAddingQuickEvent}
+                    className="w-full py-2 bg-espresso dark:bg-alabaster text-oatmeal dark:text-cocoa text-[10px] font-mono uppercase tracking-widest font-bold hover:opacity-90 transition-all"
+                  >
+                    {isAddingQuickEvent ? 'Adding Event...' : 'Add Block Event'}
+                  </button>
+                </form>
+
               </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-sans mt-2">
-              <div><span className="text-[#7c7265] dark:text-[#9a9088] font-bold">Date:</span> {booking.date}</div>
-              <div><span className="text-[#7c7265] dark:text-[#9a9088] font-bold">Time:</span> {booking.time}</div>
-              <div><span className="text-[#7c7265] dark:text-[#9a9088] font-bold">Package:</span> {booking.package}</div>
-            </div>
-            {booking.vision && (
-              <div className="mt-4 p-3 bg-oatmeal/40 dark:bg-surface-2/40 border border-sand/40 dark:border-dark-border/40">
-                <p className="text-[11px] text-[#7c7265] dark:text-[#9a9088] font-mono uppercase tracking-wider mb-1">Client Vision/Notes:</p>
-                <p className="text-xs italic text-espresso/90 dark:text-alabaster/90 font-sans">"{booking.vision}"</p>
+            ) : (
+              <div className="space-y-4 text-center py-4">
+                <p className="text-xs text-[#7c7265] dark:text-[#9a9088] leading-relaxed">
+                  Connect your Google Calendar to view upcoming shoots, see conflict warning systems, and write events directly from Shutterhaus Admin.
+                </p>
+                <button
+                  onClick={handleConnectGoogle}
+                  className="w-full py-2 bg-[#4285F4] text-white text-[10px] font-mono uppercase tracking-widest font-bold hover:opacity-90 transition-all flex justify-center items-center gap-2"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Connect Google Calendar</span>
+                </button>
               </div>
             )}
           </div>
-        ))}
-        {bookings.length === 0 && <p className="text-xs text-[#7c7265] dark:text-[#9a9088]">No bookings found.</p>}
+        </div>
+
       </div>
+
+      {/* Editing Booking Modal */}
+      {editingBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-espresso/80 backdrop-blur-sm">
+          <div className="relative max-w-lg w-full bg-oatmeal dark:bg-cocoa p-6 border border-sand dark:border-dark-border shadow-xl space-y-4 animate-fade-in text-espresso dark:text-alabaster">
+            
+            <div className="flex justify-between items-center border-b border-sand dark:border-dark-border pb-3">
+              <h3 className="font-serif font-light text-base uppercase tracking-wider">Edit / Fix Booking Details</h3>
+              <button 
+                onClick={() => setEditingBooking(null)}
+                className="p-1 text-[#7c7265] hover:text-espresso dark:hover:text-alabaster transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-mono text-[10px] text-[#7c7265] uppercase mb-1">Client Name</label>
+                  <input 
+                    type="text" 
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    required
+                    className="w-full bg-white dark:bg-surface-1 border border-sand dark:border-dark-border p-2 text-xs font-sans text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-[10px] text-[#7c7265] uppercase mb-1">Client Email</label>
+                  <input 
+                    type="email" 
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    required
+                    className="w-full bg-white dark:bg-surface-1 border border-sand dark:border-dark-border p-2 text-xs font-sans text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-mono text-[10px] text-[#7c7265] uppercase mb-1">Client Phone</label>
+                  <input 
+                    type="text" 
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    className="w-full bg-white dark:bg-surface-1 border border-sand dark:border-dark-border p-2 text-xs font-sans text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-[10px] text-[#7c7265] uppercase mb-1">Package / Shoot Type</label>
+                  <select 
+                    value={editPackage}
+                    onChange={(e) => setEditPackage(e.target.value)}
+                    className="w-full bg-white dark:bg-surface-1 border border-sand dark:border-dark-border p-2 text-xs font-sans text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
+                  >
+                    <option value="Portrait Fine Art Session">Portrait Fine Art Session</option>
+                    <option value="Boudoir & Intimate Portraiture">Boudoir & Intimate Portraiture</option>
+                    <option value="Family & Heritage Session">Family & Heritage Session</option>
+                    <option value="Events — Corporate Booking">Events — Corporate Booking</option>
+                    <option value="Commercial — Campaign Booking">Commercial — Campaign Booking</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-mono text-[10px] text-[#7c7265] uppercase mb-1">Shoot Date</label>
+                  <input 
+                    type="date" 
+                    value={editDate}
+                    onChange={(e) => setEditDate(e.target.value)}
+                    required
+                    className="w-full bg-white dark:bg-surface-1 border border-sand dark:border-dark-border p-2 text-xs font-mono text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-[10px] text-[#7c7265] uppercase mb-1">Time Slot</label>
+                  <select 
+                    value={editTime}
+                    onChange={(e) => setEditTime(e.target.value)}
+                    className="w-full bg-white dark:bg-surface-1 border border-sand dark:border-dark-border p-2 text-xs font-mono text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
+                  >
+                    <option value="09:00 AM">09:00 AM (Morning Natural Softlight)</option>
+                    <option value="11:30 AM">11:30 AM (Crisp Midday Architectural)</option>
+                    <option value="02:00 PM">02:00 PM (Pre-Sunset Warmth)</option>
+                    <option value="04:30 PM">04:30 PM (Golden Hour & Twilight)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-mono text-[10px] text-[#7c7265] uppercase mb-1">Client Vision / Notes</label>
+                <textarea 
+                  rows={4}
+                  value={editVision}
+                  onChange={(e) => setEditVision(e.target.value)}
+                  className="w-full bg-white dark:bg-surface-1 border border-sand dark:border-dark-border p-2 text-xs font-sans text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-sand dark:border-dark-border">
+                <button 
+                  type="button" 
+                  onClick={() => setEditingBooking(null)}
+                  className="px-4 py-2 border border-sand dark:border-dark-border text-[10px] font-mono uppercase tracking-widest hover:bg-sand/20"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-5 py-2 bg-espresso dark:bg-alabaster text-oatmeal dark:text-cocoa text-[10px] font-mono uppercase tracking-widest font-bold hover:opacity-90"
+                >
+                  Save & Update
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
