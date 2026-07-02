@@ -1415,19 +1415,15 @@ export default function App() {
           {/* Social spill triggers */}
           <div className="flex gap-2 flex-wrap pt-4">
             <a
-              href="#"
+              href="https://www.instagram.com/shutterhausvisuals/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 border border-sand dark:border-dark-border px-3.5 py-2 text-[10px] font-mono uppercase text-[#7c7265] dark:text-[#9a9088] hover:border-accent-light hover:text-accent-light dark:hover:border-accent-dark dark:hover:text-accent-dark transition-colors cursor-hover"
             >
               Instagram
             </a>
             <a
-              href="#"
-              className="inline-flex items-center gap-1.5 border border-sand dark:border-dark-border px-3.5 py-2 text-[10px] font-mono uppercase text-[#7c7265] dark:text-[#9a9088] hover:border-accent-light hover:text-accent-light dark:hover:border-accent-dark dark:hover:text-accent-dark transition-colors cursor-hover"
-            >
-              LinkedIn
-            </a>
-            <a
-              href="https://pixieset.com"
+              href="https://shutterhausvisuals.mypixieset.com/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 border border-sand dark:border-dark-border bg-oatmeal/50 dark:bg-surface-1/40 px-3.5 py-2 text-[10px] font-mono uppercase text-accent-light dark:text-accent-dark hover:border-accent-light dark:hover:border-accent-dark transition-colors cursor-hover"
@@ -1691,7 +1687,9 @@ export default function App() {
         <ul className="flex gap-6 text-[10px] font-mono uppercase tracking-wider text-[#7c7265] dark:text-[#9a9088]">
           <li>
             <a
-              href="#"
+              href="https://www.instagram.com/shutterhausvisuals/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hover:text-espresso dark:hover:text-alabaster"
             >
               Instagram
@@ -1699,15 +1697,7 @@ export default function App() {
           </li>
           <li>
             <a
-              href="#"
-              className="hover:text-espresso dark:hover:text-alabaster"
-            >
-              LinkedIn
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://pixieset.com"
+              href="https://shutterhausvisuals.mypixieset.com/"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-espresso dark:hover:text-alabaster"

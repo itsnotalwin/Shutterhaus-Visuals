@@ -339,6 +339,8 @@ function PortfolioManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [groqKey, setGroqKey] = useState(localStorage.getItem('groqApiKey') || '');
+  const [geminiKey, setGeminiKey] = useState(localStorage.getItem('geminiApiKey') || '');
+  const [aiEngine, setAiEngine] = useState<'groq' | 'gemini'>(localStorage.getItem('preferredAiEngine') as 'groq' | 'gemini' || 'gemini');
   
   // Batch states
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
@@ -549,82 +551,162 @@ function PortfolioManager() {
     setIsGenerating(true);
     try {
       let data;
-      try {
-        const response = await fetch('/api/groq-generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageUrl, groqApiKey: groqKey, googleAccessToken })
-        });
-        
-        // If static host (like GitHub Pages) returns 405 Method Not Allowed, or 404, fallback to client-side call
-        if (response.status === 405 || response.status === 404) {
-          throw new Error('Backend not available');
-        }
-        
-        data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to generate metadata');
-        }
-      } catch (err: any) {
-        // Fallback: Call Groq API directly from the client if backend is missing
-        console.warn('Backend API failed or missing, attempting direct client-side Groq call...', err);
-        if (!groqKey) throw new Error('Groq API Key is required for direct client-side calls.');
-        
-        const finalImageUrl = await fetchImageAsBase64(imageUrl);
-        
-        const completion = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${groqKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: "meta-llama/llama-4-scout-17b-16e-instruct",
-            messages: [
-              {
-                role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: "Analyze this image and return a JSON object with a suitable title, category (must be exactly one of: 'portrait', 'boudoir', 'family', 'event', 'editorial'), and a short 1-2 sentence description for a fine-art photography portfolio. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\" }"
-                  },
-                  {
-                    type: "image_url",
-                    image_url: { url: finalImageUrl }
-                  }
-                ]
-              }
-            ],
-            response_format: { type: "json_object" }
-          })
-        });
-        
-        if (!completion.ok) {
-           const errData = await completion.json();
-           throw new Error(errData.error?.message || 'Direct Groq API call failed');
-        }
-        
-        const completionData = await completion.json();
-        const content = completionData.choices[0]?.message?.content;
-        
+      if (aiEngine === 'gemini') {
         try {
-          data = JSON.parse(content);
-        } catch (e) {
-          const match = content.match(/```(?:json)?\n([\s\S]*?)\n```/);
-          if (match) {
-            data = JSON.parse(match[1]);
-          } else {
-            const matchBraces = content.match(/\{[\s\S]*\}/);
-            if (matchBraces) data = JSON.parse(matchBraces[0]);
-            else throw new Error('Failed to parse fallback Groq response');
+          const response = await fetch('/api/gemini-generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl, geminiApiKey: geminiKey, googleAccessToken })
+          });
+          
+          if (response.status === 405 || response.status === 404) {
+            throw new Error('Backend not available');
+          }
+          
+          data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to generate metadata');
+          }
+        } catch (err: any) {
+          // Fallback: Call Gemini API directly from the client if backend is missing
+          console.warn('Backend API failed or missing, attempting direct client-side Gemini call...', err);
+          if (!geminiKey) throw new Error('Gemini API Key is required for direct client-side calls (e.g. on GitHub Pages).');
+          
+          const finalImageUrl = await fetchImageAsBase64(imageUrl);
+          let rawBase64 = "";
+          let mimeType = "image/jpeg";
+          if (finalImageUrl.startsWith("data:")) {
+            const match = finalImageUrl.match(/^data:([^;]+);base64,(.+)$/);
+            if (match && match.length === 3) {
+              mimeType = match[1];
+              rawBase64 = match[2];
+            }
+          }
+          if (!rawBase64) {
+            throw new Error("Could not load image data for direct client-side analysis. Make sure the image URL is accessible.");
+          }
+
+          const directResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      inlineData: {
+                        mimeType: mimeType,
+                        data: rawBase64
+                      }
+                    },
+                    {
+                      text: "Analyze this image and return an SEO-optimized JSON object suitable for a premium photography portfolio website. The response must contain a captivating, elegant 'title'; a single 'category' that matches exactly one of ['portrait', 'boudoir', 'family', 'event', 'editorial']; a refined, 1-2 sentence search-optimized 'description' capturing the mood, depth, and aesthetics; and an array of 3 to 5 'seoKeywords' representing the photo tags. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\", \"seoKeywords\": [...] }"
+                    }
+                  ]
+                }
+              ],
+              generationConfig: {
+                responseMimeType: "application/json"
+              }
+            })
+          });
+
+          if (!directResponse.ok) {
+            const errData = await directResponse.json();
+            throw new Error(errData.error?.message || 'Direct Gemini API call failed');
+          }
+
+          const directData = await directResponse.json();
+          const textContent = directData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!textContent) {
+            throw new Error("No response text returned from direct Gemini API");
+          }
+          data = JSON.parse(textContent);
+        }
+      } else {
+        // Groq Engine
+        try {
+          const response = await fetch('/api/groq-generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl, groqApiKey: groqKey, googleAccessToken })
+          });
+          
+          if (response.status === 405 || response.status === 404) {
+            throw new Error('Backend not available');
+          }
+          
+          data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to generate metadata');
+          }
+        } catch (err: any) {
+          // Fallback: Call Groq API directly from the client if backend is missing
+          console.warn('Backend API failed or missing, attempting direct client-side Groq call...', err);
+          if (!groqKey) throw new Error('Groq API Key is required for direct client-side calls.');
+          
+          const finalImageUrl = await fetchImageAsBase64(imageUrl);
+          
+          const completion = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${groqKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: "meta-llama/llama-4-scout-17b-16e-instruct",
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Analyze this image and return a JSON object with a suitable title, category (must be exactly one of: 'portrait', 'boudoir', 'family', 'event', 'editorial'), and a short 1-2 sentence description for a fine-art photography portfolio. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\" }"
+                    },
+                    {
+                      type: "image_url",
+                      image_url: { url: finalImageUrl }
+                    }
+                  ]
+                }
+              ],
+              response_format: { type: "json_object" }
+            })
+          });
+          
+          if (!completion.ok) {
+             const errData = await completion.json();
+             throw new Error(errData.error?.message || 'Direct Groq API call failed');
+          }
+          
+          const completionData = await completion.json();
+          const content = completionData.choices[0]?.message?.content;
+          
+          try {
+            data = JSON.parse(content);
+          } catch (e) {
+            const match = content.match(/```(?:json)?\n([\s\S]*?)\n```/);
+            if (match) {
+              data = JSON.parse(match[1]);
+            } else {
+              const matchBraces = content.match(/\{[\s\S]*\}/);
+              if (matchBraces) data = JSON.parse(matchBraces[0]);
+              else throw new Error('Failed to parse fallback Groq response');
+            }
           }
         }
       }
 
       if (data.title) setTitle(data.title);
       if (data.category) setCategory(data.category);
-      if (data.description) setDescription(data.description);
+      if (data.description) {
+        let finalDesc = data.description;
+        if (data.seoKeywords && data.seoKeywords.length > 0) {
+          finalDesc += "\n\nSEO Tags: " + data.seoKeywords.map((k: string) => `#${k.replace(/\s+/g, '')}`).join(' ');
+        }
+        setDescription(finalDesc);
+      }
     } catch (err: any) {
       alert(err.message);
       console.error(err);
@@ -702,85 +784,169 @@ function PortfolioManager() {
 
       try {
         let data;
-        try {
-          const response = await fetch('/api/groq-generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              imageUrl: item.imageUrl,
-              groqApiKey: groqKey,
-              googleAccessToken
-            })
-          });
-
-          if (response.status === 405 || response.status === 404) {
-             throw new Error('Backend not available');
-          }
-
-          data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.error || 'Failed to analyze');
-          }
-        } catch (err: any) {
-          console.warn('Backend API failed or missing, attempting direct client-side Groq call...', err);
-          if (!groqKey) throw new Error('Groq API Key is required for direct client-side calls.');
-          
-          const finalImageUrl = await fetchImageAsBase64(item.imageUrl);
-          
-          const completion = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${groqKey}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: "meta-llama/llama-4-scout-17b-16e-instruct",
-              messages: [
-                {
-                  role: "user",
-                  content: [
-                    {
-                      type: "text",
-                      text: "Analyze this image and return a JSON object with a suitable title, category (must be exactly one of: 'portrait', 'boudoir', 'family', 'event', 'editorial'), and a short 1-2 sentence description for a fine-art photography portfolio. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\" }"
-                    },
-                    {
-                      type: "image_url",
-                      image_url: { url: finalImageUrl }
-                    }
-                  ]
-                }
-              ],
-              response_format: { type: "json_object" }
-            })
-          });
-          
-          if (!completion.ok) {
-             const errData = await completion.json();
-             throw new Error(errData.error?.message || 'Direct Groq API call failed');
-          }
-          
-          const completionData = await completion.json();
-          const content = completionData.choices[0]?.message?.content;
-          
+        if (aiEngine === 'gemini') {
           try {
-            data = JSON.parse(content);
-          } catch (e) {
-            const match = content.match(/```(?:json)?\n([\s\S]*?)\n```/);
-            if (match) {
-              data = JSON.parse(match[1]);
-            } else {
-              const matchBraces = content.match(/\{[\s\S]*\}/);
-              if (matchBraces) data = JSON.parse(matchBraces[0]);
-              else throw new Error('Failed to parse fallback Groq response');
+            const response = await fetch('/api/gemini-generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                imageUrl: item.imageUrl,
+                geminiApiKey: geminiKey,
+                googleAccessToken
+              })
+            });
+
+            if (response.status === 405 || response.status === 404) {
+               throw new Error('Backend not available');
+            }
+
+            data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.error || 'Failed to analyze');
+            }
+          } catch (err: any) {
+            console.warn('Backend API failed or missing, attempting direct client-side Gemini call...', err);
+            if (!geminiKey) throw new Error('Gemini API Key is required for direct client-side calls.');
+            
+            const finalImageUrl = await fetchImageAsBase64(item.imageUrl);
+            let rawBase64 = "";
+            let mimeType = "image/jpeg";
+            if (finalImageUrl.startsWith("data:")) {
+              const match = finalImageUrl.match(/^data:([^;]+);base64,(.+)$/);
+              if (match && match.length === 3) {
+                mimeType = match[1];
+                rawBase64 = match[2];
+              }
+            }
+            if (!rawBase64) {
+              throw new Error("Could not load image data for direct client-side analysis. Make sure the image URL is accessible.");
+            }
+
+            const directResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      {
+                        inlineData: {
+                          mimeType: mimeType,
+                          data: rawBase64
+                        }
+                      },
+                      {
+                        text: "Analyze this image and return an SEO-optimized JSON object suitable for a premium photography portfolio website. The response must contain a captivating, elegant 'title'; a single 'category' that matches exactly one of ['portrait', 'boudoir', 'family', 'event', 'editorial']; a refined, 1-2 sentence search-optimized 'description' capturing the mood, depth, and aesthetics; and an array of 3 to 5 'seoKeywords' representing the photo tags. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\", \"seoKeywords\": [...] }"
+                      }
+                    ]
+                  }
+                ],
+                generationConfig: {
+                  responseMimeType: "application/json"
+                }
+              })
+            });
+
+            if (!directResponse.ok) {
+              const errData = await directResponse.json();
+              throw new Error(errData.error?.message || 'Direct Gemini API call failed');
+            }
+
+            const directData = await directResponse.json();
+            const textContent = directData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!textContent) {
+              throw new Error("No response text returned from direct Gemini API");
+            }
+            data = JSON.parse(textContent);
+          }
+        } else {
+          // Groq engine
+          try {
+            const response = await fetch('/api/groq-generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                imageUrl: item.imageUrl,
+                groqApiKey: groqKey,
+                googleAccessToken
+              })
+            });
+
+            if (response.status === 405 || response.status === 404) {
+               throw new Error('Backend not available');
+            }
+
+            data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.error || 'Failed to analyze');
+            }
+          } catch (err: any) {
+            console.warn('Backend API failed or missing, attempting direct client-side Groq call...', err);
+            if (!groqKey) throw new Error('Groq API Key is required for direct client-side calls.');
+            
+            const finalImageUrl = await fetchImageAsBase64(item.imageUrl);
+            
+            const completion = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${groqKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                model: "meta-llama/llama-4-scout-17b-16e-instruct",
+                messages: [
+                  {
+                    role: "user",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Analyze this image and return a JSON object with a suitable title, category (must be exactly one of: 'portrait', 'boudoir', 'family', 'event', 'editorial'), and a short 1-2 sentence description for a fine-art photography portfolio. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\" }"
+                      },
+                      {
+                        type: "image_url",
+                        image_url: { url: finalImageUrl }
+                      }
+                    ]
+                  }
+                ],
+                response_format: { type: "json_object" }
+              })
+            });
+            
+            if (!completion.ok) {
+               const errData = await completion.json();
+               throw new Error(errData.error?.message || 'Direct Groq API call failed');
+            }
+            
+            const completionData = await completion.json();
+            const content = completionData.choices[0]?.message?.content;
+            
+            try {
+              data = JSON.parse(content);
+            } catch (e) {
+              const match = content.match(/```(?:json)?\n([\s\S]*?)\n```/);
+              if (match) {
+                data = JSON.parse(match[1]);
+              } else {
+                const matchBraces = content.match(/\{[\s\S]*\}/);
+                if (matchBraces) data = JSON.parse(matchBraces[0]);
+                else throw new Error('Failed to parse fallback Groq response');
+              }
             }
           }
+        }
+
+        // Apply SEO keywords to description if present
+        let finalDescription = data.description || item.description;
+        if (data.seoKeywords && data.seoKeywords.length > 0) {
+          finalDescription += "\n\nSEO Tags: " + data.seoKeywords.map((k: string) => `#${k.replace(/\s+/g, '')}`).join(' ');
         }
 
         setBatchItems(prev => prev.map(i => i.id === item.id ? {
           ...i,
           title: data.title || i.title,
           category: data.category || i.category,
-          description: data.description || i.description,
+          description: finalDescription,
           status: 'done' as const,
           error: ''
         } : i));
@@ -1121,26 +1287,79 @@ function PortfolioManager() {
                       }} />
                     </div>
                     {imageUrl && (
-                      <div className="flex gap-2">
-                        <input 
-                          type="password"
-                          placeholder="Groq API Key (gsk_...) - Optional if set in AI Studio"
-                          value={groqKey}
-                          onChange={(e) => {
-                            setGroqKey(e.target.value);
-                            localStorage.setItem('groqApiKey', e.target.value);
-                          }}
-                          className="flex-1 p-2 bg-white dark:bg-surface-1 border border-sand dark:border-dark-border text-xs focus:outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleGenerateMetadata}
-                          disabled={isGenerating}
-                          className="px-3 py-2 bg-accent-light dark:bg-accent-dark text-white dark:text-cocoa text-[10px] tracking-widest font-mono uppercase font-bold hover:opacity-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
-                        >
-                          <Sparkles className={`w-3 h-3 ${isGenerating ? 'animate-spin' : ''}`} />
-                          {isGenerating ? 'Analyzing...' : 'AI Auto-Fill'}
-                        </button>
+                      <div className="space-y-2">
+                        {/* Engine selector */}
+                        <div className="flex items-center justify-between gap-2 border border-sand/40 dark:border-dark-border/40 p-1.5 bg-oatmeal/20 dark:bg-surface-1/40">
+                          <span className="text-[9px] font-mono uppercase text-[#7c7265] dark:text-[#9a9088] pl-1">
+                            AI Model Engine
+                          </span>
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAiEngine('gemini');
+                                localStorage.setItem('preferredAiEngine', 'gemini');
+                              }}
+                              className={`px-2 py-0.5 text-[9px] font-mono uppercase transition-all ${
+                                aiEngine === 'gemini'
+                                  ? 'bg-accent-light dark:bg-accent-dark text-white dark:text-cocoa font-bold'
+                                  : 'text-[#7c7265] dark:text-[#9a9088] hover:text-[#5a5248]'
+                              }`}
+                            >
+                              Gemini 3.5
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAiEngine('groq');
+                                localStorage.setItem('preferredAiEngine', 'groq');
+                              }}
+                              className={`px-2 py-0.5 text-[9px] font-mono uppercase transition-all ${
+                                aiEngine === 'groq'
+                                  ? 'bg-accent-light dark:bg-accent-dark text-white dark:text-cocoa font-bold'
+                                  : 'text-[#7c7265] dark:text-[#9a9088] hover:text-[#5a5248]'
+                              }`}
+                            >
+                              Llama 4 (Groq)
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Selected Key input & Auto-fill button */}
+                        <div className="flex gap-2">
+                          {aiEngine === 'gemini' ? (
+                            <input 
+                              type="password"
+                              placeholder="Gemini API Key - Optional if set in AI Studio"
+                              value={geminiKey}
+                              onChange={(e) => {
+                                setGeminiKey(e.target.value);
+                                localStorage.setItem('geminiApiKey', e.target.value);
+                              }}
+                              className="flex-1 p-2 bg-white dark:bg-surface-1 border border-sand dark:border-dark-border text-xs focus:outline-none"
+                            />
+                          ) : (
+                            <input 
+                              type="password"
+                              placeholder="Groq API Key (gsk_...) - Optional"
+                              value={groqKey}
+                              onChange={(e) => {
+                                setGroqKey(e.target.value);
+                                localStorage.setItem('groqApiKey', e.target.value);
+                              }}
+                              className="flex-1 p-2 bg-white dark:bg-surface-1 border border-sand dark:border-dark-border text-xs focus:outline-none"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={handleGenerateMetadata}
+                            disabled={isGenerating}
+                            className="px-3 py-2 bg-accent-light dark:bg-accent-dark text-white dark:text-cocoa text-[10px] tracking-widest font-mono uppercase font-bold hover:opacity-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                          >
+                            <Sparkles className={`w-3 h-3 ${isGenerating ? 'animate-spin' : ''}`} />
+                            {isGenerating ? 'Analyzing...' : 'AI SEO Auto-Fill'}
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1382,22 +1601,78 @@ function PortfolioManager() {
                 </div>
               </div>
 
-              {/* Right: Groq Ingestion Settings */}
+              {/* Right: AI Ingestion Settings */}
               <div className="md:col-span-4 border-l border-sand/40 dark:border-dark-border/40 md:pl-6 space-y-3">
                 <label className="text-[10px] font-mono uppercase tracking-wider block font-bold">Ingestion Engine Settings</label>
+                
+                {/* Engine Selector */}
                 <div className="space-y-1">
-                  <label className="text-[9px] font-mono uppercase block text-[#7c7265] dark:text-[#9a9088]">Groq Vision Key</label>
-                  <input
-                    type="password"
-                    placeholder="gsk_... (Optional if in settings)"
-                    value={groqKey}
-                    onChange={(e) => {
-                      setGroqKey(e.target.value);
-                      localStorage.setItem('groqApiKey', e.target.value);
-                    }}
-                    className="w-full p-2 bg-white dark:bg-surface-1 border border-sand dark:border-dark-border text-xs focus:outline-none focus:border-accent-light dark:focus:border-accent-dark"
-                  />
+                  <label className="text-[9px] font-mono uppercase block text-[#7c7265] dark:text-[#9a9088]">Preferred Model</label>
+                  <div className="flex border border-sand dark:border-dark-border p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiEngine('gemini');
+                        localStorage.setItem('preferredAiEngine', 'gemini');
+                      }}
+                      className={`flex-1 py-1 text-[9px] font-mono uppercase font-bold tracking-wider text-center transition-all ${
+                        aiEngine === 'gemini'
+                          ? 'bg-accent-light dark:bg-accent-dark text-white dark:text-cocoa'
+                          : 'text-[#7c7265] dark:text-[#9a9088] hover:bg-sand/10'
+                      }`}
+                    >
+                      Gemini 3.5
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiEngine('groq');
+                        localStorage.setItem('preferredAiEngine', 'groq');
+                      }}
+                      className={`flex-1 py-1 text-[9px] font-mono uppercase font-bold tracking-wider text-center transition-all ${
+                        aiEngine === 'groq'
+                          ? 'bg-accent-light dark:bg-accent-dark text-white dark:text-cocoa'
+                          : 'text-[#7c7265] dark:text-[#9a9088] hover:bg-sand/10'
+                      }`}
+                    >
+                      Llama 4 (Groq)
+                    </button>
+                  </div>
                 </div>
+
+                {/* API Key Input */}
+                <div className="space-y-1">
+                  {aiEngine === 'gemini' ? (
+                    <>
+                      <label className="text-[9px] font-mono uppercase block text-[#7c7265] dark:text-[#9a9088]">Gemini API Key</label>
+                      <input
+                        type="password"
+                        placeholder="Gemini Key (Optional if set in AI Studio)"
+                        value={geminiKey}
+                        onChange={(e) => {
+                          setGeminiKey(e.target.value);
+                          localStorage.setItem('geminiApiKey', e.target.value);
+                        }}
+                        className="w-full p-2 bg-white dark:bg-surface-1 border border-sand dark:border-dark-border text-xs focus:outline-none focus:border-accent-light dark:focus:border-accent-dark"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <label className="text-[9px] font-mono uppercase block text-[#7c7265] dark:text-[#9a9088]">Groq Vision Key</label>
+                      <input
+                        type="password"
+                        placeholder="gsk_... (Optional if in settings)"
+                        value={groqKey}
+                        onChange={(e) => {
+                          setGroqKey(e.target.value);
+                          localStorage.setItem('groqApiKey', e.target.value);
+                        }}
+                        className="w-full p-2 bg-white dark:bg-surface-1 border border-sand dark:border-dark-border text-xs focus:outline-none focus:border-accent-light dark:focus:border-accent-dark"
+                      />
+                    </>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   onClick={handleAnalyzeBatch}
@@ -1405,7 +1680,7 @@ function PortfolioManager() {
                   className="w-full py-2 bg-accent-light dark:bg-accent-dark text-white dark:text-cocoa text-[10px] tracking-widest font-mono uppercase font-bold hover:opacity-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
                 >
                   <Sparkles className={`w-3.5 h-3.5 ${isBatchAnalyzing ? 'animate-spin' : ''}`} />
-                  {isBatchAnalyzing ? 'AI Auto-Analyzing Batch...' : 'AI Auto-Fill Batch metadata'}
+                  {isBatchAnalyzing ? 'AI Auto-Analyzing Batch...' : 'AI SEO Auto-Fill Batch'}
                 </button>
               </div>
             </div>

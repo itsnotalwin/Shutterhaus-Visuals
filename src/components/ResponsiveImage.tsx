@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Camera } from 'lucide-react';
 
 interface ResponsiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
@@ -60,28 +61,70 @@ export function ResponsiveImage({ src, alt, className, title, ...props }: Respon
               ${base}?w=1600&q=80&auto=format 1600w`;
     }
     // For Firebasestorage or other CDNs, if we had resizing extensions, we'd do it here.
-    // For local assets (no dynamic resize), we just map the same source to different widths to satisfy the structure
     return `${url} 400w, ${url} 800w, ${url} 1200w, ${url} 1600w`;
+  };
+
+  // Construct a low-res URL for blur-up placeholder
+  const getLowResUrl = (url: string) => {
+    if (!url) return '';
+    if (url.includes('unsplash.com')) {
+      const base = url.split('?')[0];
+      return `${base}?w=40&q=20&blur=5&auto=format`;
+    }
+    if (url.includes('drive.google.com')) {
+      if (url.includes('&sz=')) {
+        return url.replace(/&sz=w\d+/, '&sz=w40');
+      }
+      return `${url}&sz=w40`;
+    }
+    return '';
   };
 
   const srcSet = isInView ? generateSrcSet(src) : undefined;
   const sizes = isInView ? "(max-width: 640px) 400px, (max-width: 1024px) 800px, (max-width: 1536px) 1200px, 1600px" : undefined;
+  const lowResSrc = getLowResUrl(src);
+
+  const isAbsolute = className?.includes('absolute');
+  const wrapperClass = `relative overflow-hidden ${isAbsolute ? 'absolute inset-0 w-full h-full' : 'w-full h-full'}`;
 
   return (
-    <img
-      ref={imgRef}
-      src={isInView ? src : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E"}
-      srcSet={srcSet}
-      sizes={sizes}
-      alt={alt || ''}
-      title={title}
-      className={`transition-all duration-[900ms] ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className || ''}`}
-      onLoad={(e) => {
-        setIsLoaded(true);
-        if (props.onLoad) props.onLoad(e);
-      }}
-      {...props}
-    />
+    <div className={wrapperClass}>
+      {/* 1. Shimmer Skeleton Screen + Low-Res Blur-up Overlay */}
+      <div 
+        className={`absolute inset-0 w-full h-full z-10 transition-opacity duration-700 ease-out flex items-center justify-center bg-sand/10 dark:bg-surface-2/40 animate-shimmer ${
+          isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+      >
+        {/* Low-res Blurred Image */}
+        {lowResSrc && isInView && (
+          <img
+            src={lowResSrc}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover filter blur-lg scale-110 opacity-70 transition-all duration-300"
+          />
+        )}
+        
+        {/* Subtle, premium, low-opacity camera/aperture vector icon to represent photography loading */}
+        <Camera className="w-5 h-5 text-espresso/15 dark:text-alabaster/15 relative z-20 animate-pulse" />
+      </div>
+
+      {/* 2. Main High-Resolution Image */}
+      <img
+        ref={imgRef}
+        src={isInView ? src : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E"}
+        srcSet={srcSet}
+        sizes={sizes}
+        alt={alt || ''}
+        title={title}
+        className={`transition-all duration-[900ms] ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className || ''}`}
+        onLoad={(e) => {
+          setIsLoaded(true);
+          if (props.onLoad) props.onLoad(e);
+        }}
+        {...props}
+      />
+    </div>
   );
 }
+
 
