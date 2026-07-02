@@ -46,7 +46,7 @@ export const PORTFOLIO_DATA: PortfolioItem[] = [
     title: 'Golden Hour Embrace',
     category: 'portrait',
     year: '2024',
-    location: 'Kempon - Park, ZA',
+    location: 'Kempton Park, ZA',
     imageUrl: img1,
     description: 'An intimate, sun-drenched outdoor couple session capturing pure connection and natural emotion.',
     dimensions: 'Digital & 8"x10" Print',
@@ -230,7 +230,7 @@ export const PRICING_PACKAGES_DATA: PricingPackage[] = [
     features: [
       'Strictly natural light',
       '1 Outfit setup (No changes)',
-      'Outdoor-only location (Kempon - Park areas)',
+      'Outdoor-only location (Kempton Park areas)',
       '1 Professional photographer',
       'Pixieset online gallery access',
       '7-day standard delivery turnaround'

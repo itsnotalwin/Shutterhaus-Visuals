@@ -25,7 +25,7 @@ export const LOCAL_PACKAGES: LocalPackage[] = [
       "7 Day standard turnaround",
       "Pixieset online gallery",
     ],
-    isPopular: false,
+    isPopular: true,
     idealFor:
       "Simple, high-quality outdoor portraits using pure natural light.",
   },
@@ -60,7 +60,7 @@ export const LOCAL_PACKAGES: LocalPackage[] = [
       "7 Day standard turnaround",
       "Full family & group combinations",
     ],
-    isPopular: true,
+    isPopular: false,
     idealFor:
       "Timeless family portraiture captured in a beautiful natural setting.",
   },

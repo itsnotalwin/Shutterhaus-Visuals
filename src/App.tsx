@@ -366,7 +366,7 @@ export default function App() {
     setPreSelectedPackage(mappedPackage);
     setFormService(packageName);
     setFormMessage(
-      `Hi Alwin,\n\nI would like to lock in the "${packageName}" setup.\n\nProject Context / Details:\n${detailsString}\n\nPlease verify availability in Kempon - Park / Gauteng region!`,
+      `Hi Alwin,\n\nI would like to lock in the "${packageName}" setup.\n\nProject Context / Details:\n${detailsString}\n\nPlease verify availability in Kempton Park / Gauteng region!`,
     );
 
     // Smooth scroll to booking-assistant calendar
@@ -729,7 +729,7 @@ export default function App() {
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <span className="text-[10px] md:text-[11px] font-mono tracking-[0.25em] text-espresso/60 dark:text-alabaster/55 uppercase block">
-                Kempon - Park, South Africa
+                Kempton Park, South Africa
               </span>
               <span className="text-[9px] font-mono tracking-widest text-[#7c7265] dark:text-[#9a9088] uppercase block">
                 Est. 2023 &bull; Portrait &bull; Editorial &bull; Campaigns
@@ -811,7 +811,7 @@ export default function App() {
                 light
               </em>{" "}
               — the kind that falls once, means something, and is gone before
-              you can ask it to wait. Three years, Kempon - Park roots, one
+              you can ask it to wait. Three years, Kempton Park roots, one
               obsession.
             </p>
           </div>
@@ -1299,7 +1299,7 @@ export default function App() {
                 Studio
               </p>
               <p className="text-xs leading-relaxed text-espresso dark:text-alabaster">
-                Kempon - Park, ZA
+                Kempton Park, ZA
               </p>
             </div>
             <div>
@@ -1568,7 +1568,7 @@ export default function App() {
       {/* FOOTER */}
       <footer className="px-6 md:px-12 py-8 border-t border-sand dark:border-dark-border max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-[10px] text-[#7c7265] dark:text-[#9a9088] font-mono uppercase tracking-wider text-center md:text-left">
-          © 2026 SHUTTERHAUS VISUALS &bull; Structured in Kempon - Park, South
+          © 2026 SHUTTERHAUS VISUALS &bull; Structured in Kempton Park, South
           Africa.
         </p>
 
