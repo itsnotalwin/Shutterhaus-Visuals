@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Camera } from 'lucide-react';
 
 interface ResponsiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
@@ -6,50 +6,13 @@ interface ResponsiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement>
   alt?: string;
   title?: string;
   className?: string;
+  priority?: boolean;
   onLoad?: React.ReactEventHandler<HTMLImageElement>;
   onError?: React.ReactEventHandler<HTMLImageElement>;
 }
 
-export function ResponsiveImage({ src, alt, className, title, ...props }: ResponsiveImageProps) {
-  const [isInView, setIsInView] = useState(false);
+export function ResponsiveImage({ src, alt, className, title, priority = false, ...props }: ResponsiveImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  useEffect(() => {
-    if (imgRef.current?.complete && isInView) {
-      setIsLoaded(true);
-    }
-  }, [isInView]);
-
-  useEffect(() => {
-    // Intersection Observer for prefetching/lazy loading
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setIsInView(true);
-          observer.disconnect();
-        }
-      },
-      {
-        rootMargin: '600px 0px', // Prefetch before it enters the viewport (background pre-loading logic)
-        threshold: 0.01,
-      }
-    );
-
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
-    }
-
-    // Fallback: load anyway after a delay to ensure they are available in the background
-    const idleTimer = setTimeout(() => {
-      setIsInView(true);
-    }, 2500);
-
-    return () => {
-      observer.disconnect();
-      clearTimeout(idleTimer);
-    };
-  }, []);
 
   // Responsive srcSet logic
   const generateSrcSet = (url: string) => {
@@ -80,8 +43,8 @@ export function ResponsiveImage({ src, alt, className, title, ...props }: Respon
     return '';
   };
 
-  const srcSet = isInView ? generateSrcSet(src) : undefined;
-  const sizes = isInView ? "(max-width: 640px) 400px, (max-width: 1024px) 800px, (max-width: 1536px) 1200px, 1600px" : undefined;
+  const srcSet = generateSrcSet(src);
+  const sizes = "(max-width: 640px) 400px, (max-width: 1024px) 800px, (max-width: 1536px) 1200px, 1600px";
   const lowResSrc = getLowResUrl(src);
 
   const isAbsolute = className?.includes('absolute');
@@ -110,10 +73,12 @@ export function ResponsiveImage({ src, alt, className, title, ...props }: Respon
         />
 
         {/* Dynamic Low-res asset Blurred Image (Unsplash / Google Drive) */}
-        {lowResSrc && isInView && (
+        {lowResSrc && (
           <img
             src={lowResSrc}
             alt=""
+            loading={priority ? 'eager' : 'lazy'}
+            decoding={priority ? 'sync' : 'async'}
             className="absolute inset-0 w-full h-full object-cover filter blur-md scale-110 opacity-85 transition-opacity duration-500"
           />
         )}
@@ -127,12 +92,14 @@ export function ResponsiveImage({ src, alt, className, title, ...props }: Respon
 
       {/* 2. Main High-Resolution Image */}
       <img
-        ref={imgRef}
-        src={isInView ? src : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E"}
+        src={src}
         srcSet={srcSet}
         sizes={sizes}
         alt={alt || ''}
         title={title}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding={priority ? 'sync' : 'async'}
+        fetchPriority={priority ? 'high' : 'auto'}
         className={`transition-all duration-[1000ms] ease-out ${
           isLoaded ? 'opacity-100 filter blur-0 scale-100' : 'opacity-0 filter blur-md scale-[1.02]'
         } ${className || ''}`}
@@ -145,5 +112,6 @@ export function ResponsiveImage({ src, alt, className, title, ...props }: Respon
     </div>
   );
 }
+
 
 

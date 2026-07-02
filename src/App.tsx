@@ -720,6 +720,9 @@ export default function App() {
             src={portfolio[heroBgIndex % portfolio.length]?.imageUrl}
             alt="Lead photography artwork study"
             referrerPolicy="no-referrer"
+            fetchPriority="high"
+            loading="eager"
+            decoding="sync"
             className="w-full h-[120%] -top-[10%] relative object-cover filter grayscale sepia-[0.1] contrast-[1.04] will-change-transform"
           />
         </div>
