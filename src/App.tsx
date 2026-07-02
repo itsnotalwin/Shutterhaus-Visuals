@@ -43,130 +43,7 @@ import {
   doc,
   deleteDoc,
 } from "firebase/firestore";
-
-// Standard South African Johannesburg & Kempton Park Pricing packages aligned to standard R (ZAR)
-interface LocalPackage {
-  id: string;
-  name: string;
-  priceZar: number;
-  priceRetainerZar: number;
-  duration: string;
-  imagesCount: string;
-  features: string[];
-  isPopular: boolean;
-  idealFor: string;
-}
-
-const LOCAL_PACKAGES: LocalPackage[] = [
-  {
-    id: "pkg-1",
-    name: "Natural Light Basic",
-    priceZar: 1000,
-    priceRetainerZar: 800,
-    duration: "45 Min &bull; Outdoor Only",
-    imagesCount: "15 edited images",
-    features: [
-      "15 High-res edited images",
-      "Strictly natural light",
-      "1 Outfit setup (No changes)",
-      "7 Day standard turnaround",
-      "Pixieset online gallery",
-    ],
-    isPopular: false,
-    idealFor:
-      "Simple, high-quality outdoor portraits using pure natural light.",
-  },
-  {
-    id: "pkg-2",
-    name: "Matric Farewell",
-    priceZar: 2200,
-    priceRetainerZar: 1760,
-    duration: "1.5 Hours &bull; 1 location",
-    imagesCount: "25 retouched photos",
-    features: [
-      "25 High-res edited images",
-      "Solo & partner portraits",
-      "Pixieset online gallery",
-      "5 Day fast turnaround",
-      "Creative direction support",
-    ],
-    isPopular: false,
-    idealFor: "Capturing the elegance and milestone of your graduation night.",
-  },
-  {
-    id: "pkg-3",
-    name: "Family Shoots",
-    priceZar: 3200,
-    priceRetainerZar: 2560,
-    duration: "1.5 Hours &bull; Outdoor Location",
-    imagesCount: "35 retouched photos",
-    features: [
-      "35 High-res edited images",
-      "Up to 6 family members",
-      "Pixieset online gallery",
-      "7 Day standard turnaround",
-      "Full family & group combinations",
-    ],
-    isPopular: true,
-    idealFor:
-      "Timeless family portraiture captured in a beautiful natural setting.",
-  },
-  {
-    id: "pkg-4",
-    name: "Studio Portraiture",
-    priceZar: 5500,
-    priceRetainerZar: 4400,
-    duration: "1 Hour &bull; Private Studio",
-    imagesCount: "25 edited images",
-    features: [
-      "25 High-res edited images",
-      "1 Outfit setup",
-      "Pixieset online gallery",
-      "5 Day fast turnaround",
-      "Fine-art color grading",
-    ],
-    isPopular: false,
-    idealFor:
-      "Standard couples, individual headshots, and professional personal lookbooks.",
-  },
-  {
-    id: "pkg-5",
-    name: "Sultry Boudoir",
-    priceZar: 6500,
-    priceRetainerZar: 5200,
-    duration: "2 Hours &bull; Private Studio",
-    imagesCount: "20 retouched photos",
-    features: [
-      "20 Premium retouched assets",
-      "Professional posing & creative guidance",
-      "Sensual high-contrast lighting setups",
-      "Private online gallery",
-      "7-day confidential delivery",
-    ],
-    isPopular: false,
-    idealFor:
-      "Intimate, empowering, confidential and beautifully raw personal boudoir sessions.",
-  },
-  {
-    id: "pkg-6",
-    name: "Editorial Elite",
-    priceZar: 32500,
-    priceRetainerZar: 26000,
-    duration: "Full Day &bull; Studio & On-Location",
-    imagesCount: "60 magazine-grade assets",
-    features: [
-      "60 Magazine-grade retouched assets",
-      "Full wardrobe provision (3-4 designer outfits)",
-      "Professional Makeup & Hair Stylist on-site",
-      "Full commercial usage rights",
-      "1 Framed A2 Archival Print",
-      "Priority 48-hour digital delivery",
-    ],
-    isPopular: false,
-    idealFor:
-      "High-end personal branding, editorial publication, or luxury fashion portfolios with full wardrobe support.",
-  },
-];
+import { LocalPackage, LOCAL_PACKAGES } from "./packages";
 
 export default function App() {
   // Theme state
@@ -183,30 +60,32 @@ export default function App() {
 
   // Portfolio items state (persistent in cache with auto-upgrade sync for updated default items)
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(() => {
-    const saved = localStorage.getItem("shutterhaus_portfolio");
-    if (saved) {
-      try {
-        let items: PortfolioItem[] = JSON.parse(saved);
-        // Map cached items: if they are default items, replace with the latest definitions to fix obsolete content like Submerged Echoes
-        items = items.map((item) => {
-          const defaultMatch = PORTFOLIO_DATA.find((p) => p.id === item.id);
-          if (
-            defaultMatch &&
-            (item.title === "Submerged Echoes" ||
-              defaultMatch.title !== item.title ||
-              defaultMatch.imageUrl !== item.imageUrl)
-          ) {
-            return defaultMatch;
-          }
-          return item;
-        });
-        return items;
-      } catch (e) {
-        console.error(
-          "Failed to parse portfolio from cache, using default.",
-          e,
-        );
+    try {
+      const saved = localStorage.getItem("shutterhaus_portfolio");
+      if (saved) {
+        let items = JSON.parse(saved);
+        if (Array.isArray(items)) {
+          // Filter out nulls/invalid elements and map safely
+          return items.filter(Boolean).map((item) => {
+            if (!item || !item.id) return item;
+            const defaultMatch = PORTFOLIO_DATA.find((p) => p && p.id === item.id);
+            if (
+              defaultMatch &&
+              (item.title === "Submerged Echoes" ||
+                defaultMatch.title !== item.title ||
+                defaultMatch.imageUrl !== item.imageUrl)
+            ) {
+              return defaultMatch;
+            }
+            return item;
+          });
+        }
       }
+    } catch (e) {
+      console.error(
+        "Failed to parse portfolio from cache, using default.",
+        e,
+      );
     }
     return PORTFOLIO_DATA;
   });
@@ -254,20 +133,29 @@ export default function App() {
 
   // Sent Messages outbox state for persistent message tracking!
   const [sentMessages, setSentMessages] = useState<Message[]>(() => {
-    const saved = localStorage.getItem("shutterhaus_messages");
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem("shutterhaus_messages");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.error("Failed to parse sent messages:", e);
+    }
+    return [];
   });
   const [showInbox, setShowInbox] = useState(false);
 
   // Bookings scheduling state
   const [bookings, setBookings] = useState<Booking[]>(() => {
-    const saved = localStorage.getItem("shutterhaus_bookings");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Failed to parse bookings from cache.", e);
+    try {
+      const saved = localStorage.getItem("shutterhaus_bookings");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
       }
+    } catch (e) {
+      console.error("Failed to parse bookings from cache.", e);
     }
     // Preseed a default confirmed booking for professional dynamic feedback on first load
     return [
@@ -425,9 +313,9 @@ export default function App() {
             const ease = 1 - Math.pow(1 - progress, 3);
 
             setAnimatedStats({
-              projects: Math.floor(ease * 340),
-              years: Math.floor(ease * 6),
-              countries: Math.floor(ease * 12),
+              projects: Math.floor(ease * 0),
+              years: Math.floor(ease * 3),
+              countries: Math.floor(ease * 1),
             });
 
             if (progress < 1) {
@@ -478,7 +366,7 @@ export default function App() {
     setPreSelectedPackage(mappedPackage);
     setFormService(packageName);
     setFormMessage(
-      `Hi Alwin,\n\nI would like to lock in the "${packageName}" setup.\n\nProject Context / Details:\n${detailsString}\n\nPlease verify availability in Kempton Park / Gauteng region!`,
+      `Hi Alwin,\n\nI would like to lock in the "${packageName}" setup.\n\nProject Context / Details:\n${detailsString}\n\nPlease verify availability in Kempon - Park / Gauteng region!`,
     );
 
     // Smooth scroll to booking-assistant calendar
@@ -841,10 +729,10 @@ export default function App() {
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <span className="text-[10px] md:text-[11px] font-mono tracking-[0.25em] text-espresso/60 dark:text-alabaster/55 uppercase block">
-                Johannesburg, South Africa
+                Kempon - Park, South Africa
               </span>
               <span className="text-[9px] font-mono tracking-widest text-[#7c7265] dark:text-[#9a9088] uppercase block">
-                Est. 2019 &bull; Portrait &bull; Editorial &bull; Campaigns
+                Est. 2023 &bull; Portrait &bull; Editorial &bull; Campaigns
               </span>
             </div>
 
@@ -923,7 +811,7 @@ export default function App() {
                 light
               </em>{" "}
               — the kind that falls once, means something, and is gone before
-              you can ask it to wait. Six years, Johannesburg roots, one
+              you can ask it to wait. Three years, Kempon - Park roots, one
               obsession.
             </p>
           </div>
@@ -1174,7 +1062,7 @@ export default function App() {
               Studio Founder
             </p>
             <span className="text-xs font-semibold uppercase block mt-1">
-              Alwin &bull; Est. 2019
+              Alwin &bull; Est. 2023
             </span>
           </div>
         </div>
@@ -1213,15 +1101,15 @@ export default function App() {
           <div className="grid grid-cols-3 gap-6 pt-8 border-t border-sand dark:border-dark-border font-mono">
             <div className="space-y-1">
               <span className="text-2xl md:text-4xl font-serif italic text-accent-light dark:text-accent-dark block">
-                {animatedStats.projects}+
+                {animatedStats.projects}
               </span>
               <p className="text-[9px] uppercase text-[#7c7265] dark:text-[#9a9088] tracking-widest">
-                Completed Projects
+                Completed Products
               </p>
             </div>
             <div className="space-y-1">
               <span className="text-2xl md:text-4xl font-serif italic text-accent-light dark:text-accent-dark block">
-                {animatedStats.years}+
+                {animatedStats.years}
               </span>
               <p className="text-[9px] uppercase text-[#7c7265] dark:text-[#9a9088] tracking-widest">
                 Years Active
@@ -1257,7 +1145,7 @@ export default function App() {
             <span
               className={`text-[10px] font-mono uppercase tracking-widest ${!isRetainer ? "text-espresso dark:text-alabaster font-bold" : "text-[#7c7265] dark:text-[#9a9088]"}`}
             >
-              Standard Session
+              Normal Session
             </span>
             <button
               onClick={() => setIsRetainer(!isRetainer)}
@@ -1289,11 +1177,11 @@ export default function App() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 font-mono text-xs">
           {LOCAL_PACKAGES.map((pkg) => {
             const price = isRetainer ? pkg.priceRetainerZar : pkg.priceZar;
-            const detailsString = `Rate Mode: ${isRetainer ? "Retainer 20%" : "Standard"}\nDetails: ${pkg.imagesCount}\nDuration: ${pkg.duration}\nIncludes: ${pkg.features.join(", ")}`;
+            const detailsString = `Rate Mode: ${isRetainer ? "Retainer 20%" : "Normal"}\nDetails: ${pkg.imagesCount}\nDuration: ${pkg.duration}\nIncludes: ${pkg.features.join(", ")}`;
             return (
               <div
                 key={pkg.id}
-                className={`p-6 flex flex-col justify-between min-h-[400px] transition-all duration-300 border border-sand dark:border-dark-border hover:border-accent-light/50 dark:hover:border-accent-dark/50 ${
+                className={`p-6 flex flex-col justify-between min-h-[420px] transition-all duration-300 border border-sand dark:border-dark-border hover:border-accent-light/50 dark:hover:border-accent-dark/50 ${
                   pkg.isPopular
                     ? "bg-accent-light/[0.03] dark:bg-accent-dark/[0.03] ring-1 ring-accent-light/20 dark:ring-accent-dark/20"
                     : "bg-[#ece2d0]/10 dark:bg-surface-2/20"
@@ -1308,10 +1196,24 @@ export default function App() {
                   <h4 className="font-serif italic text-lg text-espresso dark:text-alabaster">
                     {pkg.name}
                   </h4>
-                  <div className="space-y-0.5">
+                  <div className="space-y-1.5">
                     <p className="text-2xl font-serif italic font-bold text-accent-light dark:text-accent-dark">
                       R {price.toLocaleString("en-ZA")}
                     </p>
+                    <div className="flex flex-col gap-1 text-[10px] font-mono border-t border-b border-sand/30 dark:border-dark-border/30 py-1.5 my-1.5">
+                      <div className="flex justify-between">
+                        <span className="text-[#7c7265] dark:text-[#9a9088]">Normal Rate:</span>
+                        <span className={!isRetainer ? "font-bold text-espresso dark:text-alabaster text-xs" : "text-[#7c7265] dark:text-[#9a9088]"}>
+                          R {pkg.priceZar.toLocaleString("en-ZA")}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-accent-light dark:text-accent-dark">Retainer Rate:</span>
+                        <span className={isRetainer ? "font-bold text-accent-light dark:text-accent-dark text-xs" : "text-[#7c7265] dark:text-[#9a9088]"}>
+                          R {pkg.priceRetainerZar.toLocaleString("en-ZA")}
+                        </span>
+                      </div>
+                    </div>
                     <p
                       className="text-[9px] text-[#7c7265] dark:text-[#9a9088] uppercase"
                       dangerouslySetInnerHTML={{ __html: pkg.duration }}
@@ -1375,10 +1277,10 @@ export default function App() {
                 Email
               </p>
               <a
-                href="mailto:hello@shutterhausvisuals.com"
+                href="mailto:itsnotalwin@gmail.com"
                 className="text-xs font-bold hover:text-accent-light dark:hover:text-accent-dark transition-colors"
               >
-                hello@shutterhausvisuals.com
+                itsnotalwin@gmail.com
               </a>
             </div>
             <div>
@@ -1386,10 +1288,10 @@ export default function App() {
                 Phone
               </p>
               <a
-                href="tel:+27110000000"
+                href="tel:+27730958363"
                 className="text-xs font-bold hover:text-accent-light dark:hover:text-accent-dark transition-colors"
               >
-                +27 11 000 0000
+                +27 73 095 8363
               </a>
             </div>
             <div>
@@ -1397,9 +1299,7 @@ export default function App() {
                 Studio
               </p>
               <p className="text-xs leading-relaxed text-espresso dark:text-alabaster">
-                44 Fox Street, Maboneng
-                <br />
-                Johannesburg, 2094
+                Kempon - Park, ZA
               </p>
             </div>
             <div>
@@ -1473,6 +1373,7 @@ export default function App() {
                   bookings={bookings}
                   onDeleteBooking={handleDeleteBooking}
                   preSelectedPackage={preSelectedPackage}
+                  isRetainer={isRetainer}
                 />
               </motion.div>
             ) : (
@@ -1667,7 +1568,7 @@ export default function App() {
       {/* FOOTER */}
       <footer className="px-6 md:px-12 py-8 border-t border-sand dark:border-dark-border max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-[10px] text-[#7c7265] dark:text-[#9a9088] font-mono uppercase tracking-wider text-center md:text-left">
-          © 2026 SHUTTERHAUS VISUALS &bull; Structured in Johannesburg, South
+          © 2026 SHUTTERHAUS VISUALS &bull; Structured in Kempon - Park, South
           Africa.
         </p>
 

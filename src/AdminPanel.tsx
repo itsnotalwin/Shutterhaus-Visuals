@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { auth, db } from './firebase';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { collection, getDocs, doc, setDoc, deleteDoc, query, onSnapshot, getDoc, updateDoc, writeBatch } from 'firebase/firestore';
@@ -277,6 +278,7 @@ export default function AdminPanel() {
             </svg>
             Sign in with Google
           </button>
+          <RouterLink to="/" className="block mt-4 text-[10px] font-mono tracking-widest uppercase hover:underline">Return to Home</RouterLink>
         </div>
       </div>
     );
@@ -310,6 +312,12 @@ export default function AdminPanel() {
             >
               Messages
             </button>
+            <RouterLink 
+              to="/"
+              className="text-left px-4 py-2 text-xs font-mono uppercase tracking-wider transition-colors hover:bg-sand/30 dark:hover:bg-surface-1 text-accent-light dark:text-accent-dark flex items-center gap-1.5"
+            >
+              ← Main Site
+            </RouterLink>
           </nav>
         </div>
         <div className="pt-8 space-y-4">

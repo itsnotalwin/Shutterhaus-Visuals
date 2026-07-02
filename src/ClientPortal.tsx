@@ -22,11 +22,24 @@ export default function ClientPortal() {
 
   useEffect(() => {
     if (user) {
-      const q = query(collection(db, 'bookings'), where('email', '==', user.email));
+      const q = query(collection(db, 'bookings'), where('clientEmail', '==', user.email));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const bookedItems: Booking[] = [];
         snapshot.forEach((doc) => {
-          bookedItems.push({ id: doc.id, ...doc.data() } as Booking);
+          const data = doc.data();
+          bookedItems.push({
+            id: doc.id,
+            name: data.clientName || data.name || "Anonymous Client",
+            email: data.clientEmail || data.email || "",
+            service: data.package || data.service || "Photography Session",
+            date: data.date || "",
+            timeSlot: data.time || data.timeSlot || "",
+            vision: data.vision || "",
+            timestamp: data.timestamp || "",
+            status: ["approved", "Confirmed", "shooting", "retouching", "delivered"].includes(data.status)
+              ? "Confirmed"
+              : "Pending Review",
+          } as Booking);
         });
         setBookings(bookedItems);
       });

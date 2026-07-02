@@ -14,19 +14,22 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { Booking } from '../types';
+import { LOCAL_PACKAGES } from '../packages';
 
 interface BookingCalendarProps {
   onAddBooking: (booking: Booking) => void;
   bookings: Booking[];
   onDeleteBooking: (id: string) => void;
   preSelectedPackage?: string;
+  isRetainer?: boolean;
 }
 
 export default function BookingCalendar({ 
   onAddBooking, 
   bookings, 
   onDeleteBooking,
-  preSelectedPackage 
+  preSelectedPackage,
+  isRetainer = true
 }: BookingCalendarProps) {
   // Use June 2026 as default to match the user's simulation date (or dynamic)
   const today = new Date(2026, 5, 23); // June 23, 2026
@@ -734,20 +737,22 @@ export default function BookingCalendar({
 
                           {/* Shoot Type Select */}
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-[9px] tracking-wider uppercase font-mono text-[#7c7265] dark:text-[#9a9088]">
+                            <label className="text-[10px] tracking-wider uppercase font-mono font-bold text-espresso/80 dark:text-alabaster/80">
                               Shoot Category
                             </label>
                             <select
                               value={shootType}
                               onChange={(e) => setShootType(e.target.value)}
-                              className="bg-transparent border-b border-sand dark:border-dark-border focus:border-accent-light dark:focus:border-accent-dark outline-none py-2 text-xs cursor-pointer font-mono text-espresso dark:text-alabaster [&>option]:bg-oatmeal [&>option]:dark:bg-[#1a1817] [&>option]:text-espresso [&>option]:dark:text-alabaster"
+                              className="w-full bg-sand/40 dark:bg-surface-2/95 border border-sand-dark/40 dark:border-dark-border/80 focus:border-accent-light dark:focus:border-accent-dark focus:ring-1 focus:ring-accent-light dark:focus:ring-accent-dark outline-none py-2 px-2 text-[11px] sm:text-xs rounded-md cursor-pointer font-sans font-medium text-espresso dark:text-alabaster [&>option]:bg-oatmeal [&>option]:dark:bg-[#231f1d] [&>option]:text-espresso [&>option]:dark:text-alabaster transition-all shadow-sm"
                             >
-                              <option value="Natural Light Basic">Natural Light Basic (R850)</option>
-                              <option value="Matric Farewell">Matric Farewell (R1,800)</option>
-                              <option value="Family Shoots">Family Shoots (R2,500)</option>
-                              <option value="Studio Portraiture">Studio Portraiture (R1,850)</option>
-                              <option value="Sultry Boudoir">Sultry Boudoir (R3,500)</option>
-                              <option value="Editorial Elite">Editorial Elite (R8,500)</option>
+                              {LOCAL_PACKAGES.map((pkg) => {
+                                const price = isRetainer ? pkg.priceRetainerZar : pkg.priceZar;
+                                return (
+                                  <option key={pkg.id} value={pkg.name}>
+                                    {pkg.name} (R {price.toLocaleString("en-ZA")})
+                                  </option>
+                                );
+                              })}
                             </select>
                           </div>
 

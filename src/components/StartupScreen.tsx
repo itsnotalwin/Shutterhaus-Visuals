@@ -9,7 +9,7 @@ export function StartupScreen() {
     // Hide the startup screen after a brief delay to allow initial assets to load/render
     const timer = setTimeout(() => {
       setIsVisible(false);
-    }, 5000);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -20,8 +20,10 @@ export function StartupScreen() {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
-          className="fixed inset-0 z-[100] bg-oatmeal dark:bg-cocoa flex flex-col items-center justify-center pointer-events-none p-6"
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+          className="fixed inset-0 z-[100] bg-oatmeal dark:bg-cocoa flex flex-col items-center justify-center cursor-pointer p-6"
+          onClick={() => setIsVisible(false)}
+          title="Click to skip"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, filter: "blur(4px)" }}
