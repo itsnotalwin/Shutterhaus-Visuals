@@ -733,7 +733,7 @@ export default function App() {
                 Kempton Park, South Africa
               </span>
               <span className="text-[9px] font-mono tracking-widest text-[#7c7265] dark:text-[#9a9088] uppercase block">
-                Est. 2023 &bull; Portrait &bull; Editorial &bull; Campaigns
+                Est. 2024 &bull; Portrait &bull; Editorial &bull; Campaigns
               </span>
             </div>
 
@@ -1085,7 +1085,7 @@ export default function App() {
               Studio Founder
             </p>
             <span className="text-xs font-semibold uppercase block mt-1">
-              Alwin &bull; Est. 2023
+              Alwin &bull; Est. 2024
             </span>
           </div>
         </div>
