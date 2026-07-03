@@ -3,8 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { flushSync } from "react-dom";
 import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
 import {
-  Sun,
-  Moon,
   Plus,
   Trash2,
   ArrowUpRight,
@@ -54,18 +52,6 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [path]);
-
-  // Theme state
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("shutterhaus_theme");
-      if (saved === "light" || saved === "dark") return saved;
-      return window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-    }
-    return "light";
-  });
 
   const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
@@ -207,33 +193,6 @@ export default function App() {
 
   // Portfolio image loader tracking (fallbacks to canvases dynamically)
   const canvasRefs = useRef<{ [key: string]: HTMLCanvasElement | null }>({});
-
-  // Sync theme
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-      root.setAttribute("data-theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      root.setAttribute("data-theme", "light");
-    }
-    localStorage.setItem("shutterhaus_theme", theme);
-  }, [theme]);
-
-  // Smooth premium cross-fade theme toggle
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    if (!document.startViewTransition) {
-      setTheme(newTheme);
-      return;
-    }
-    document.startViewTransition(() => {
-      flushSync(() => {
-        setTheme(newTheme);
-      });
-    });
-  };
 
   // Sync portfolio items
   useEffect(() => {
@@ -622,34 +581,14 @@ export default function App() {
 
           <div className="h-4 w-[1px] bg-sand dark:bg-dark-border" />
 
-          {/* Theme & custom triggers */}
+          {/* Custom triggers */}
           <div className="flex items-center gap-4">
-            <button
-              onClick={toggleTheme}
-              className="w-9 h-9 border border-sand dark:border-dark-border rounded-full flex items-center justify-center hover:border-accent-light dark:hover:border-accent-dark hover:scale-105 transition-all duration-300 cursor-hover"
-              title="Toggle theme"
-            >
-              {theme === "dark" ? (
-                <Sun className="w-3.5 h-3.5 text-alabaster" />
-              ) : (
-                <Moon className="w-3.5 h-3.5 text-espresso" />
-              )}
-            </button>
+            {/* Can add custom triggers here in the future if needed */}
           </div>
         </div>
 
         {/* Mobile menu toggle */}
         <div className="flex items-center gap-3 md:hidden">
-          <button
-            onClick={toggleTheme}
-            className="w-9 h-9 border border-sand dark:border-dark-border rounded-full flex items-center justify-center"
-          >
-            {theme === "dark" ? (
-              <Sun className="w-3.5 h-3.5" />
-            ) : (
-              <Moon className="w-3.5 h-3.5" />
-            )}
-          </button>
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="w-9 h-9 border border-sand dark:border-dark-border flex flex-col justify-center gap-1.5 p-2"
@@ -667,16 +606,38 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Mobile menu drawer */}
+      {/* Mobile menu drawer & backdrop */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-0 top-[70px] z-30 bg-oatmeal dark:bg-[#121110] border-b border-sand dark:border-dark-border p-6 flex flex-col gap-6 md:hidden shadow-lg"
-          >
-            <ul className="flex flex-col gap-4 text-xs font-mono tracking-[0.2em] uppercase">
+          <>
+            {/* Backdrop blur */}
+            <motion.div
+              initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+              animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
+              exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 top-[70px] z-20 bg-black/10 dark:bg-black/30 md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            {/* Drawer */}
+            <motion.div
+              initial={{ opacity: 0, y: "-10%" }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: "-10%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0.5, bottom: 0.05 }}
+              onDragEnd={(e, info) => {
+                if (info.offset.y < -30 || info.velocity.y < -200) {
+                  setIsMobileMenuOpen(false);
+                }
+              }}
+              className="fixed inset-x-0 top-[70px] z-30 bg-oatmeal/95 dark:bg-[#121110]/95 backdrop-blur-xl border-b border-sand dark:border-dark-border p-6 flex flex-col gap-6 md:hidden shadow-2xl rounded-b-3xl"
+            >
+              {/* Swipe handle */}
+              <div className="w-10 h-1 bg-sand/80 dark:bg-dark-border rounded-full mx-auto mb-1" />
+              <ul className="flex flex-col gap-4 text-xs font-mono tracking-[0.2em] uppercase">
               <li>
                 <Link to="/"
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -736,6 +697,7 @@ export default function App() {
               </li>
             </ul>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -753,7 +715,7 @@ export default function App() {
             key={heroBgIndex}
             style={{ y: heroParallaxY }}
             initial={{ scale: 1.1, opacity: 0 }}
-            animate={{ scale: 1, opacity: theme === "dark" ? 0.22 : 0.3 }}
+            animate={{ scale: 1, opacity: 0.3 }}
             transition={{ duration: 1.4, ease: "easeOut" }}
             src={portfolio[heroBgIndex % portfolio.length]?.imageUrl}
             alt="Lead photography artwork study"
