@@ -853,9 +853,7 @@ export default function App() {
             </h2>
           </div>
           <div className="lg:col-span-7">
-            <p className="text-xs md:text-sm text-[#7c7265] dark:text-[#9a9088] leading-relaxed max-w-[560px] font-light">
-              The craft, broken down into focus areas.
-            </p>
+            
           </div>
         </div>
 
