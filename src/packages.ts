@@ -99,24 +99,5 @@ export const LOCAL_PACKAGES: LocalPackage[] = [
     isPopular: false,
     idealFor:
       "Intimate, empowering, confidential and beautifully raw personal boudoir sessions.",
-  },
-  {
-    id: "pkg-6",
-    name: "Editorial Elite",
-    priceZar: 32500,
-    priceRetainerZar: 26000,
-    duration: "Full Day &bull; Studio & On-Location",
-    imagesCount: "60 magazine-grade assets",
-    features: [
-      "60 Magazine-grade retouched assets",
-      "Full wardrobe provision (3-4 designer outfits)",
-      "Professional Makeup & Hair Stylist on-site",
-      "Full commercial usage rights",
-      "1 Framed A2 Archival Print",
-      "Priority 48-hour digital delivery",
-    ],
-    isPopular: false,
-    idealFor:
-      "High-end personal branding, editorial publication, or luxury fashion portfolios with full wardrobe support.",
-    },
+  }
 ];

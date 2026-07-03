@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, MouseEvent, FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { flushSync } from "react-dom";
 import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
 import {
@@ -23,6 +23,7 @@ import {
   Sparkles,
   Camera,
   RotateCcw,
+  Shuffle,
 } from "lucide-react";
 
 import { PortfolioItem, Category, Message, Booking } from "./types";
@@ -43,9 +44,17 @@ import {
   doc,
   deleteDoc,
 } from "firebase/firestore";
+import { useImagePreloader } from "./hooks/useImagePreloader";
 import { LocalPackage, LOCAL_PACKAGES } from "./packages";
 
 export default function App() {
+  const location = useLocation();
+  const path = location.pathname;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [path]);
+
   // Theme state
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window !== "undefined") {
@@ -58,6 +67,15 @@ export default function App() {
     return "light";
   });
 
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   // Portfolio items state (persistent in cache with auto-upgrade sync for updated default items)
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(() => {
     try {
@@ -66,7 +84,7 @@ export default function App() {
         let items = JSON.parse(saved);
         if (Array.isArray(items)) {
           // Filter out nulls/invalid elements and map safely
-          return items.filter(Boolean).map((item) => {
+          const mappedItems = items.filter(Boolean).map((item) => {
             if (!item || !item.id) return item;
             const defaultMatch = PORTFOLIO_DATA.find((p) => p && p.id === item.id);
             if (
@@ -79,6 +97,7 @@ export default function App() {
             }
             return item;
           });
+          return shuffleArray(mappedItems);
         }
       }
     } catch (e) {
@@ -87,7 +106,7 @@ export default function App() {
         e,
       );
     }
-    return PORTFOLIO_DATA;
+    return shuffleArray(PORTFOLIO_DATA);
   });
 
   // Filter category
@@ -221,6 +240,8 @@ export default function App() {
     localStorage.setItem("shutterhaus_portfolio", JSON.stringify(portfolio));
   }, [portfolio]);
 
+  const initialLoadRef = useRef(true);
+
   // Sync with Firestore portfolio
   useEffect(() => {
     const q = query(collection(db, "portfolio"));
@@ -231,10 +252,14 @@ export default function App() {
           const firestorePortfolio = snapshot.docs.map(
             (doc) => doc.data() as PortfolioItem,
           );
-          setPortfolio(firestorePortfolio);
-        } else {
-          setPortfolio([]);
+          if (initialLoadRef.current) {
+            setPortfolio(shuffleArray(firestorePortfolio));
+            initialLoadRef.current = false;
+          } else {
+            setPortfolio(firestorePortfolio);
+          }
         }
+        // Important: We shouldn't setPortfolio([]) if it's empty, otherwise the default images disappear if they never seeded the DB.
       },
       (error) => {
         console.log("Using local portfolio cache. Firestore error:", error);
@@ -333,6 +358,10 @@ export default function App() {
     return () => observer.disconnect();
   }, []);
 
+  // Pre-fetch the entire portfolio gallery in the background
+  const imageUrlsToPreload = portfolio.map(item => item.imageUrl).filter(Boolean);
+  const { imagesPreloaded, progress: preloadProgress } = useImagePreloader(imageUrlsToPreload);
+
   // Paint original canvas background representations instantly
   useEffect(() => {
     portfolio.forEach((p, idx) => {
@@ -355,8 +384,6 @@ export default function App() {
     else if (packageName.includes("Studio"))
       mappedPackage = "Studio Portraiture";
     else if (packageName.includes("Boudoir")) mappedPackage = "Sultry Boudoir";
-    else if (packageName.includes("Editorial"))
-      mappedPackage = "Editorial Elite";
     else if (
       packageName.includes("Natural Light") ||
       packageName.includes("Basic")
@@ -411,6 +438,11 @@ export default function App() {
       setHeroBgIndex(0);
       localStorage.removeItem("shutterhaus_portfolio");
     }
+  };
+
+  // Shuffle portfolio items
+  const handleShufflePortfolio = () => {
+    setPortfolio((prev) => shuffleArray(prev));
   };
 
   // Contact form submission
@@ -506,12 +538,12 @@ export default function App() {
     selectedCategory === "all" ? true : item.category === selectedCategory,
   );
 
-  // Limit mobile display if not expanded to show only 1 or 2 images on mobile
+  // Limit display to 6 photos initially, unless expanded
   const displayedItems =
-    isMobile && !portfolioExpanded ? filteredItems.slice(0, 2) : filteredItems;
+    !portfolioExpanded ? filteredItems.slice(0, 6) : filteredItems;
 
   return (
-    <div className="min-h-screen bg-oatmeal dark:bg-cocoa text-espresso dark:text-alabaster relative transition-colors duration-500 pb-12 overflow-x-hidden">
+    <div className="min-h-screen bg-oatmeal dark:bg-cocoa text-espresso dark:text-alabaster relative transition-colors duration-500 pb-12 overflow-clip">
       <StartupScreen />
       {/* Subtle photography film grain texture */}
       <div className="film-grain" />
@@ -527,55 +559,56 @@ export default function App() {
             : "bg-transparent border-transparent"
         }`}
       >
-        <a
-          href="#hero"
+        <Link to="/"
           className="hover:opacity-80 transition-opacity cursor-hover"
         >
           <ShutterhausLogo variant="horizontal" iconSize={26} />
-        </a>
+        </Link>
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-10">
           <ul className="flex items-center gap-8 text-[10px] tracking-[0.2em] uppercase font-mono">
             <li>
-              <a
-                href="#services"
+              <Link to="/"
+                className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors"
+              >
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link to="/services"
                 className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors"
               >
                 Services
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="#work"
+              <Link to="/work"
                 className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors"
               >
                 Work
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="#pricing"
+              <Link to="/pricing"
                 className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors"
               >
                 Pricing
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="#about"
+              <Link to="/about"
                 className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors"
               >
                 About
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="#contact"
+              <Link to="/contact"
                 className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors"
               >
                 Contact
-              </a>
+              </Link>
             </li>
             <li>
               <Link
@@ -645,49 +678,52 @@ export default function App() {
           >
             <ul className="flex flex-col gap-4 text-xs font-mono tracking-[0.2em] uppercase">
               <li>
-                <a
-                  href="#services"
+                <Link to="/"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block py-1.5 border-b border-sand/30 dark:border-dark-border/30"
+                >
+                  00 // Home
+                </Link>
+              </li>
+              <li>
+                <Link to="/services"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block py-1.5 border-b border-sand/30 dark:border-dark-border/30"
                 >
                   01 // Services
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#work"
+                <Link to="/work"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block py-1.5 border-b border-sand/30 dark:border-dark-border/30"
                 >
                   02 // Curated Work
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#pricing"
+                <Link to="/pricing"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block py-1.5 border-b border-sand/30 dark:border-dark-border/30"
                 >
                   03 // Pricing & Estimations
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#about"
+                <Link to="/about"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block py-1.5 border-b border-sand/30 dark:border-dark-border/30"
                 >
                   04 // Team & About
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#contact"
+                <Link to="/contact"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block py-1.5 border-b border-sand/30 dark:border-dark-border/30"
                 >
                   05 // Bookings
-                </a>
+                </Link>
               </li>
               <li>
                 <Link
@@ -703,11 +739,13 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* HERO SECTION */}
-      <header
-        id="hero"
-        className="min-h-screen relative flex flex-col justify-end px-6 md:px-[var(--px)] pb-12 pt-32 overflow-hidden"
-      >
+      {(path === "/" || path === "") && (
+        <>
+          {/* HERO SECTION */}
+          <header
+            id="hero"
+            className="min-h-screen relative flex flex-col justify-end px-6 md:px-[var(--px)] pb-12 pt-32 overflow-hidden"
+          >
         {/* Absolute Background Image Viewport */}
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-t from-oatmeal via-oatmeal/50 to-oatmeal/20 dark:from-cocoa dark:via-cocoa/45 dark:to-cocoa/10 z-10" />
@@ -781,13 +819,12 @@ export default function App() {
               </p>
             </div>
             <div className="md:col-span-4 flex justify-start md:justify-end items-end">
-              <a
-                href="#work"
+              <Link to="/work"
                 className="px-5 py-3 border border-accent-light dark:border-accent-dark text-accent-light dark:text-accent-dark text-[10px] font-mono tracking-widest uppercase hover:bg-accent-light hover:text-white dark:hover:bg-accent-dark dark:hover:text-cocoa transition-all font-bold cursor-hover"
               >
                 <span>View Portfolio</span>
                 <ArrowUpRight className="w-3.5 h-3.5 inline-block ml-1.5 -mt-0.5" />
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -833,11 +870,14 @@ export default function App() {
           <ShutterhausLogo variant="stacked" />
         </motion.div>
       </section>
+        </>
+      )}
 
       {/* SERVICES SECTION */}
+      {(path === "/" || path === "/services") && (
       <section
         id="services"
-        className="px-6 md:px-12 py-24 border-t border-sand dark:border-dark-border max-w-7xl mx-auto relative"
+        className={`px-6 md:px-12 ${path === "/" ? "py-24" : "pt-40 pb-24 min-h-[100vh]"} border-t border-sand dark:border-dark-border max-w-7xl mx-auto relative`}
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end mb-16">
           <div className="lg:col-span-5 space-y-2">
@@ -887,11 +927,13 @@ export default function App() {
           ))}
         </div>
       </section>
+      )}
 
       {/* PORTFOLIO WORK SECTION */}
+      {(path === "/" || path === "/work") && (
       <section
         id="work"
-        className="px-6 md:px-12 py-24 border-t border-sand dark:border-dark-border max-w-7xl mx-auto"
+        className={`px-6 md:px-12 ${path === "/" ? "py-24" : "pt-40 pb-24 min-h-[100vh]"} border-t border-sand dark:border-dark-border max-w-7xl mx-auto`}
       >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
           <div>
@@ -904,9 +946,22 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4 text-[9px] font-mono uppercase bg-[#ece2d0]/20 dark:bg-[#1a1817]/40 border border-sand dark:border-dark-border p-2.5">
-            <span className="font-bold text-accent-light dark:text-accent-dark">
-              Curation Count: {portfolio.length}
-            </span>
+            {!imagesPreloaded ? (
+              <span className="font-bold text-accent-light dark:text-accent-dark animate-pulse">
+                Caching: {Math.round(preloadProgress)}%
+              </span>
+            ) : (
+              <span className="font-bold text-accent-light dark:text-accent-dark">
+                Curation Count: {portfolio.length}
+              </span>
+            )}
+            <button
+              onClick={handleShufflePortfolio}
+              className="text-[#7c7265] dark:text-[#9a9088] hover:text-accent-light dark:hover:text-accent-dark transition-colors flex items-center gap-1 cursor-hover"
+              title="Shuffle Portfolio"
+            >
+              <Shuffle className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
@@ -924,7 +979,10 @@ export default function App() {
           ).map((cat) => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => {
+                setSelectedCategory(cat);
+                setPortfolioExpanded(false);
+              }}
               className={`fb px-5 py-3 border-b-2 transition-colors cursor-hover whitespace-nowrap ${
                 selectedCategory === cat
                   ? "border-accent-light text-accent-light dark:border-accent-dark dark:text-accent-dark font-bold"
@@ -1016,7 +1074,7 @@ export default function App() {
           </AnimatePresence>
         </div>
 
-        {isMobile && filteredItems.length > 2 && (
+        {filteredItems.length > 6 && (
           <div className="text-center mt-8">
             <button
               onClick={() => setPortfolioExpanded(!portfolioExpanded)}
@@ -1035,7 +1093,10 @@ export default function App() {
               No photographic assets match this segment
             </span>
             <button
-              onClick={() => setSelectedCategory("all")}
+              onClick={() => {
+                setSelectedCategory("all");
+                setPortfolioExpanded(false);
+              }}
               className="px-5 py-2.5 bg-accent-light dark:bg-accent-dark text-white dark:text-cocoa text-[10px] font-mono uppercase tracking-widest hover:opacity-95 transition-all font-bold cursor-hover"
             >
               Reset Filter
@@ -1043,11 +1104,13 @@ export default function App() {
           </div>
         )}
       </section>
+      )}
 
       {/* ABOUT & LEAD PHOTOGRAPHER SECTION */}
+      {(path === "/" || path === "/about") && (
       <section
         id="about"
-        className="px-6 md:px-12 py-24 border-t border-sand dark:border-dark-border max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center"
+        className={`px-6 md:px-12 ${path === "/" ? "py-24" : "pt-40 pb-24 min-h-[100vh]"} border-t border-sand dark:border-dark-border max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center`}
       >
         {/* Curved portrait wrap */}
         <div className="lg:col-span-5 relative group overflow-hidden border border-sand dark:border-dark-border aspect-[3/4] bg-oatmeal dark:bg-surface-2">
@@ -1129,11 +1192,13 @@ export default function App() {
           </div>
         </div>
       </section>
+      )}
 
       {/* PRICING & INVESTMENT SECTION */}
+      {(path === "/" || path === "/pricing") && (
       <section
         id="pricing"
-        className="px-6 md:px-12 py-24 border-t border-sand dark:border-dark-border max-w-7xl mx-auto space-y-16"
+        className={`px-6 md:px-12 ${path === "/" ? "py-24" : "pt-40 pb-24 min-h-[100vh]"} border-t border-sand dark:border-dark-border max-w-7xl mx-auto space-y-16`}
       >
         <div className="space-y-4">
           <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#7c7265] dark:text-[#9a9088] block">
@@ -1254,11 +1319,13 @@ export default function App() {
           })}
         </div>
       </section>
+      )}
 
       {/* CONTACT & DISPATCHED OUTBOX SECTION */}
+      {(path === "/" || path === "/contact") && (
       <section
         id="contact"
-        className="px-6 md:px-12 py-24 border-t border-sand dark:border-dark-border max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16"
+        className={`px-6 md:px-12 ${path === "/" ? "py-24" : "pt-40 pb-24 min-h-[100vh]"} border-t border-sand dark:border-dark-border max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16`}
       >
         <div className="lg:col-span-5 space-y-10">
           <div className="space-y-2">
@@ -1523,9 +1590,6 @@ export default function App() {
                       <option value="Portrait — Sultry Boudoir (R3,500)">
                         Portrait — Sultry Boudoir (R3,500)
                       </option>
-                      <option value="Editorial Elite (R8,500)">
-                        Editorial Elite (R8,500)
-                      </option>
                       <option value="Events — Corporate Booking">
                         Events & Occasions Coverage
                       </option>
@@ -1567,6 +1631,7 @@ export default function App() {
           </AnimatePresence>
         </div>
       </section>
+      )}
 
       {/* FOOTER */}
       <footer className="px-6 md:px-12 py-8 border-t border-sand dark:border-dark-border max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
@@ -1576,8 +1641,7 @@ export default function App() {
         </p>
 
         {/* Shutterhaus overlapping circles back-to-top branding mark */}
-        <a
-          href="#hero"
+        <Link to="/"
           className="group/ft flex items-center justify-center transition-transform hover:scale-110"
           title="Back to top"
         >
@@ -1586,7 +1650,7 @@ export default function App() {
             iconSize={36}
             className="text-[#7c7265] dark:text-[#9a9088] hover:text-accent-light dark:hover:text-accent-dark transition-colors duration-500"
           />
-        </a>
+        </Link>
 
         <ul className="flex gap-6 text-[10px] font-mono uppercase tracking-wider text-[#7c7265] dark:text-[#9a9088]">
           <li>

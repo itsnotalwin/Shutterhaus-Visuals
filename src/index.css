@@ -31,7 +31,6 @@
   html {
     scroll-behavior: smooth;
     font-family: var(--font-sans);
-    overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
   }
   
