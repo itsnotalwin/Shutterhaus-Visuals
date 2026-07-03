@@ -504,8 +504,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-oatmeal dark:bg-cocoa text-espresso dark:text-alabaster relative transition-colors duration-500 pb-12 overflow-clip">
       <StartupScreen />
-      {/* Subtle photography film grain texture */}
-      <div className="film-grain" />
 
       {/* Fluid Dual Easing Cursor */}
 
