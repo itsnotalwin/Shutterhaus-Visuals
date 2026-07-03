@@ -14,21 +14,21 @@ export const SERVICES_DATA: Service[] = [
     id: 'svc-1',
     num: '01',
     name: 'Portrait & Lifestyle',
-    detail: 'Intimate, raw, and character-driven outdoor and lifestyle portraits. Capturing genuine moments in natural environments.',
+    detail: 'Intimate, raw, and character-driven outdoor and lifestyle portraits, capturing genuine moments in natural environments.',
     bullets: ['Couples & Engagements', 'Individual Portraits', 'Lifestyle Shoots', 'Maternity']
   },
   {
     id: 'svc-2',
     num: '02',
     name: 'Family & Heritage',
-    detail: 'Timeless family photography honoring connection and legacy. Authentic, heartwarming group and candid shots.',
+    detail: 'Timeless family photography honoring connection and legacy — authentic, heartwarming group and candid shots.',
     bullets: ['Multi-generational', 'Newborn & Babies', 'Candid Family Days', 'Pet Photography']
   },
   {
     id: 'svc-3',
     num: '03',
     name: 'Events & Occasions',
-    detail: 'Documenting the joy and high-energy of your milestone celebrations with a cinematic, unobtrusive approach.',
+    detail: 'Documenting the joy and high energy of your milestone celebrations with a cinematic, unobtrusive approach.',
     bullets: ['Matric Farewells', 'Birthdays & Anniversaries', 'Intimate Weddings', 'Corporate Functions']
   },
   {
@@ -99,7 +99,7 @@ export const PORTFOLIO_DATA: PortfolioItem[] = [
     year: '2023',
     location: 'Pretoria, ZA',
     imageUrl: img4,
-    description: 'A cinematic capturing of a matric farewell dress, blending formal elegance with a modern editorial aesthetic.',
+    description: 'A cinematic capture of a matric farewell dress, blending formal elegance with a modern editorial aesthetic.',
     dimensions: 'Digital Gallery',
     cameraSettings: {
       camera: 'Sony A7R IV',
@@ -150,7 +150,7 @@ export const PORTFOLIO_DATA: PortfolioItem[] = [
     year: '2023',
     location: 'Cape Town, ZA',
     imageUrl: img7,
-    description: 'Raw, emotive boudoir portrait focusing on silhouette and dramatic lighting.',
+    description: 'A raw, emotive boudoir portrait focusing on silhouette and dramatic lighting.',
     dimensions: 'Private Collection',
     cameraSettings: {
       camera: 'Sony A7R IV',
@@ -167,7 +167,7 @@ export const PORTFOLIO_DATA: PortfolioItem[] = [
     year: '2024',
     location: 'Stellenbosch, ZA',
     imageUrl: img8,
-    description: 'A genuine, unposed moment shared between family members in an open natural field.',
+    description: 'A genuine, unposed moment shared between family members in an open, natural field.',
     dimensions: '20" x 30" Print',
     cameraSettings: {
       camera: 'Canon EOS R5',
@@ -184,7 +184,7 @@ export const PORTFOLIO_DATA: PortfolioItem[] = [
     year: '2023',
     location: 'Sandton, ZA',
     imageUrl: img9,
-    description: 'A joyous, high-energy event coverage capturing authentic celebration.',
+    description: 'Joyous, high-energy event coverage capturing authentic celebration.',
     dimensions: 'Digital Gallery',
     cameraSettings: {
       camera: 'Nikon Z9',

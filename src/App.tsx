@@ -776,7 +776,7 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-8 border-t border-sand dark:border-dark-border/60">
             <div className="md:col-span-8">
               <p className="text-xs md:text-[13px] text-espresso/70 dark:text-alabaster/70 leading-relaxed font-light max-w-[480px]">
-                Where light meets intention. photography that documents the
+                Where light meets intention. Photography that documents the
                 high-contrast narratives only silence is patient enough to hold.
               </p>
             </div>
@@ -794,7 +794,7 @@ export default function App() {
         {/* Scrolling text prompt */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 pointer-events-none hidden md:flex">
           <span className="text-[9px] font-mono tracking-widest text-[#7c7265] dark:text-[#9a9088] uppercase">
-            Scroll to descend
+            Scroll to Explore
           </span>
           <div className="w-[1px] h-8 bg-gradient-to-b from-[#7c7265] to-transparent" />
         </div>
@@ -844,19 +844,19 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end mb-16">
           <div className="lg:col-span-5 space-y-2">
             <span className="text-[10px] font-mono tracking-[0.2em] text-[#7c7265] dark:text-[#9a9088] uppercase block">
-              01 — What we shoot
+              Our Expertise
             </span>
             <h2 className="text-3xl md:text-5xl font-serif italic font-light tracking-tight text-espresso dark:text-alabaster">
-              Crafted for
+              The craft,
               <br />
-              every frame.
+              broken down
+              <br />
+              into focus areas.
             </h2>
           </div>
           <div className="lg:col-span-7">
             <p className="text-xs md:text-sm text-[#7c7265] dark:text-[#9a9088] leading-relaxed max-w-[560px] font-light">
-              From intimate studio portraiture to high-concept commercial
-              spreads — every discipline, executed with spatial precision.
-              Select any service line to begin custom curation.
+              The craft, broken down into focus areas.
             </p>
           </div>
         </div>
@@ -900,10 +900,10 @@ export default function App() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
           <div>
             <span className="text-[10px] font-mono tracking-[0.2em] text-[#7c7265] dark:text-[#9a9088] uppercase block mb-3">
-              02 — Selected Curation
+              Selected Works
             </span>
             <h2 className="text-3xl md:text-5xl font-serif italic font-light tracking-tight text-espresso dark:text-alabaster">
-              The portfolio.
+              Archival studies in light, contrast, and human connection.
             </h2>
           </div>
 
@@ -1099,29 +1099,22 @@ export default function App() {
         <div className="lg:col-span-7 space-y-8">
           <div className="space-y-2">
             <span className="text-[10px] font-mono tracking-[0.2em] text-[#7c7265] dark:text-[#9a9088] uppercase block">
-              03 — The eye behind the lens
+              The Visionary
             </span>
-            <blockquote className="text-xl md:text-3xl font-serif italic font-light leading-relaxed text-espresso dark:text-alabaster">
-              "Light is the{" "}
-              <em className="text-accent-light dark:text-accent-dark not-italic">
-                language
-              </em>
-              . I just know how to listen."
-            </blockquote>
+            <h2 className="text-xl md:text-3xl font-serif italic font-light leading-relaxed text-espresso dark:text-alabaster">
+              Behind the lens at Shutterhaus.
+            </h2>
           </div>
 
           <div className="text-xs md:text-sm text-[#7c7265] dark:text-[#9a9088] leading-relaxed font-light space-y-4 font-sans">
             <p>
-              SHUTTERHAUS VISUALS is a Johannesburg-based studio rooted in the
-              belief that a great image never begs for attention — it earns it.
-              We blend technical precision with instinct honed over years of
-              shooting across Africa and beyond.
+              Shutterhaus is a luxury photography studio built on one belief: the most powerful images are the ones you don't have to explain.
             </p>
             <p>
-              We operate exclusively on professional platforms to produce images
-              of supreme density, depth, and spatial hierarchy. Our physical
-              works appear in publications, campaigns, galleries and living
-              rooms across two continents.
+              We don't just "take photos." We shape light with intention, read how people hold themselves, and wait for the exact moment the mask drops and the real person underneath breathes.
+            </p>
+            <p>
+              That's the fine-art difference. We aren't looking for "smiles" — we're looking for truth: the kind that shows up once, means something, and is gone before you can ask it to stay. Three years in. Kempton Park roots. One obsession.
             </p>
           </div>
 
@@ -1164,7 +1157,7 @@ export default function App() {
       >
         <div className="space-y-4">
           <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#7c7265] dark:text-[#9a9088] block">
-            04 — Investment
+            Investment
           </span>
           <h2 className="text-3xl md:text-5xl font-serif italic font-light text-espresso dark:text-alabaster">
             Simple, honest pricing.
@@ -1292,15 +1285,14 @@ export default function App() {
         <div className="lg:col-span-5 space-y-10">
           <div className="space-y-2">
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#7c7265] dark:text-[#9a9088] block">
-              05 — Get in touch
+              Inquire
             </span>
             <h2 className="text-3xl md:text-5xl font-serif italic font-light leading-[1.08] text-espresso dark:text-alabaster">
-              Let's build
-              <br />
-              something
-              <br />
-              extraordinary.
+              Let's discuss your next visual project.
             </h2>
+            <p className="text-xs md:text-sm text-[#7c7265] dark:text-[#9a9088] leading-relaxed font-light mt-4">
+              Fill out the form below. We aim to respond to all inquiries within 48 hours.
+            </p>
           </div>
 
           <div className="space-y-6 font-mono text-[11px]">
@@ -1584,7 +1576,7 @@ export default function App() {
                     type="submit"
                     className="w-full md:w-auto px-6 py-3 bg-accent-light dark:bg-accent-dark hover:opacity-95 text-white dark:text-cocoa text-[10px] tracking-widest font-mono uppercase font-bold flex items-center justify-center gap-1.5 cursor-hover"
                   >
-                    <span>Send Message</span>
+                    <span>Send Inquiry</span>
                     <Send className="w-3.5 h-3.5 shrink-0" />
                   </button>
                 </form>
