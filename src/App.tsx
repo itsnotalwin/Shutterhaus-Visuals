@@ -706,7 +706,7 @@ export default function App() {
           {/* HERO SECTION */}
           <header
             id="hero"
-            className="min-h-screen relative flex flex-col px-6 md:px-12 pb-12 pt-32 overflow-hidden"
+            className="relative flex flex-col justify-end h-[100svh] min-h-[600px] w-full px-6 md:px-12 pb-12 pt-32 overflow-hidden"
           >
         {/* Absolute Background Image Viewport */}
         <div className="absolute inset-0 z-0">
@@ -728,7 +728,7 @@ export default function App() {
         </div>
 
         {/* Hero typography & grid details */}
-        <div className="relative z-10 max-w-7xl mx-auto w-full space-y-8 md:space-y-12 mt-auto">
+        <div className="relative z-10 max-w-7xl mx-auto w-full space-y-8 md:space-y-12">
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <span className="text-[10px] md:text-[11px] font-mono tracking-[0.25em] text-espresso/60 dark:text-alabaster/55 uppercase block">
