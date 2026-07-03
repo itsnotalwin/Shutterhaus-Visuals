@@ -799,7 +799,7 @@ export default function App() {
       </header>
 
       {/* MANIFESTO SECTION */}
-      <section className="px-6 md:px-12 py-20 bg-oatmeal dark:bg-surface-1/30">
+      <section className="px-6 md:px-12 py-20 bg-oatmeal dark:bg-cocoa">
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           <div className="md:col-span-2 text-6xl md:text-8xl font-serif text-accent-light/30 dark:text-accent-dark/30 leading-none">
             ”
@@ -956,7 +956,7 @@ export default function App() {
 
         {/* Dynamic Pure CSS Masonry Grid */}
         <div className="masonry gap-4">
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence>
             {displayedItems.map((item) => {
               const originalIndex = filteredItems.findIndex(
                 (i) => i.id === item.id,
@@ -972,7 +972,6 @@ export default function App() {
               return (
                 <motion.div
                   key={item.id}
-                  layout
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
