@@ -706,7 +706,7 @@ export default function App() {
           {/* HERO SECTION */}
           <header
             id="hero"
-            className="relative flex flex-col justify-end h-[100svh] min-h-[600px] w-full px-6 md:px-12 pb-12 pt-32 overflow-hidden"
+            className="relative flex flex-col justify-end min-h-screen w-full px-6 md:px-12 pb-12 pt-32 overflow-hidden"
           >
         {/* Absolute Background Image Viewport */}
         <div className="absolute inset-0 z-0">
