@@ -114,20 +114,23 @@ END:VCARD`;
           <X className="w-5 h-5" />
         </button>
 
-        {/* 3D Card Wrapper */}
-        <div className="w-full relative h-[310px] sm:h-[280px] perspective-1000 group">
-          <motion.div
-            animate={{ rotateY: isFlipped ? 180 : 0 }}
-            transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
-            style={{ transformStyle: 'preserve-3d' }}
-            className="w-full h-full relative cursor-pointer"
-            onClick={() => setIsFlipped(!isFlipped)}
-          >
-            {/* FRONT SIDE (Minimal & Elegant) */}
-            <div 
-              style={{ backfaceVisibility: 'hidden' }}
-              className="absolute inset-0 w-full h-full p-5 sm:p-8 rounded-2xl bg-gradient-to-br from-surface-2 to-cocoa border border-sand/20 flex flex-col justify-between shadow-2xl overflow-hidden"
-            >
+        {/* Card Wrapper (Fade Transition) */}
+        <div className="w-full relative h-[310px] sm:h-[280px] group">
+          <AnimatePresence mode="wait">
+            {!isFlipped ? (
+              <motion.div
+                key="front"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4 }}
+                className="absolute inset-0 w-full h-full cursor-pointer"
+                onClick={() => setIsFlipped(true)}
+              >
+                {/* FRONT SIDE (Minimal & Elegant) */}
+                <div 
+                  className="absolute inset-0 w-full h-full p-5 sm:p-8 rounded-2xl bg-gradient-to-br from-surface-2 to-cocoa border border-sand/20 flex flex-col justify-between shadow-2xl overflow-hidden"
+                >
               {/* Decorative premium corner accents */}
               <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-sand/20 rounded-tl-2xl" />
               <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-sand/20 rounded-tr-2xl" />
@@ -186,13 +189,19 @@ END:VCARD`;
                 </span>
               </div>
             </div>
-
+          </motion.div>
+        ) : (
+          <motion.div
+            key="back"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.4 }}
+            className="absolute inset-0 w-full h-full cursor-pointer"
+            onClick={() => setIsFlipped(false)}
+          >
             {/* BACK SIDE (Detailed Contact) */}
             <div 
-              style={{ 
-                backfaceVisibility: 'hidden',
-                transform: 'rotateY(180deg)'
-              }}
               className="absolute inset-0 w-full h-full p-4 sm:p-8 rounded-2xl bg-gradient-to-br from-cocoa to-surface-2 border border-accent-dark/20 flex flex-col justify-between shadow-2xl overflow-hidden"
             >
               {/* Back Header */}
@@ -325,7 +334,9 @@ END:VCARD`;
               </div>
             </div>
           </motion.div>
-        </div>
+        )}
+      </AnimatePresence>
+    </div>
 
         {/* Dynamic Status Notifications */}
         <AnimatePresence>
