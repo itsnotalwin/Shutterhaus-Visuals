@@ -19,9 +19,39 @@
     <meta property="og:title" content="Alwin | Shutterhaus Visuals - Digital Business Card" />
     <meta property="og:description" content="Connect with Alwin, Founder & Lead Photographer of Shutterhaus Visuals. Save contact details and view selected works." />
     <meta property="og:image" content="/alwin.jpg" />
+    <style>
+      body { background-color: #121110; margin: 0; overflow-x: hidden; }
+      #initial-loader {
+        position: fixed; inset: 0; background-color: #121110; 
+        display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        z-index: 99999; transition: opacity 0.5s ease;
+      }
+      .spinner {
+        width: 32px; height: 32px; border: 2px solid rgba(225, 218, 203, 0.1); 
+        border-top-color: #e1dacb; border-radius: 50%; animation: spin 1s linear infinite;
+        margin-bottom: 16px;
+      }
+      .loader-text {
+        color: #9a9088; font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body class="bg-cocoa text-alabaster select-none min-h-screen">
+    <div id="initial-loader">
+      <div class="spinner"></div>
+      <div class="loader-text">Loading Card</div>
+    </div>
     <div id="card-root"></div>
     <script type="module" src="/src/card-main.tsx"></script>
+    <script>
+      window.addEventListener('load', () => {
+        const loader = document.getElementById('initial-loader');
+        if(loader) { 
+          loader.style.opacity = '0'; 
+          setTimeout(() => loader.remove(), 500); 
+        }
+      });
+    </script>
   </body>
 </html>

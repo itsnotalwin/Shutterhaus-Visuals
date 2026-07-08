@@ -190,13 +190,13 @@ END:VCARD`;
                         {/* Elegant Profile Picture Frame */}
                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-accent-dark/40 overflow-hidden shrink-0 bg-surface-1 shadow-2xl relative">
                           <img 
-                            src={alwinImg} 
+                            src="https://drive.google.com/thumbnail?id=1dGo1hDouUsBn3CLQsB5cz-Ji40wzxgAI&sz=w400"
                             alt="Alwin Profile" 
+                            fetchpriority="high"
                             className="w-full h-full object-cover filter grayscale contrast-[1.15] hover:grayscale-0 transition-all duration-500"
                             referrerPolicy="no-referrer"
                             onError={(e: any) => {
-                              (e.target as HTMLImageElement).src =
-                                "https://drive.google.com/thumbnail?id=1dGo1hDouUsBn3CLQsB5cz-Ji40wzxgAI&sz=w1000";
+                              (e.target as HTMLImageElement).src = alwinImg;
                             }}
                           />
                         </div>
