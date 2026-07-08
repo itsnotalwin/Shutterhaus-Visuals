@@ -93,11 +93,11 @@ END:VCARD`;
 
       {/* Header Logo */}
       <header className="w-full max-w-md mx-auto flex justify-between items-center z-10 py-4 border-b border-sand/10">
-        <a href="/" className="text-sand/90 hover:text-alabaster transition-colors flex items-center gap-2 font-mono text-[10px] tracking-widest uppercase">
+        <a href="https://itsnotalwin.github.io/Shutterhaus-Visuals" className="text-sand/90 hover:text-alabaster transition-colors flex items-center gap-2 font-mono text-[10px] tracking-widest uppercase">
           <ShutterhausLogo variant="horizontal" iconSize={20} />
         </a>
         <a 
-          href="/" 
+          href="https://itsnotalwin.github.io/Shutterhaus-Visuals" 
           className="text-[10px] font-mono tracking-widest text-[#9a9088] hover:text-alabaster transition-colors flex items-center gap-1 uppercase"
         >
           <Home className="w-3.5 h-3.5" />
@@ -473,7 +473,7 @@ END:VCARD`;
 
           {/* Return button */}
           <a
-            href="/"
+            href="https://itsnotalwin.github.io/Shutterhaus-Visuals"
             className="w-full mt-6 flex items-center justify-center gap-2 px-5 py-3.5 bg-transparent border border-sand/20 hover:border-sand/40 text-alabaster text-[10px] font-mono uppercase tracking-widest font-bold rounded-xl transition-all duration-300 cursor-hover group"
           >
             <span>View Full Portfolio Website</span>
