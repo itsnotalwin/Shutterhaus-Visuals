@@ -12,7 +12,8 @@ import {
   Sparkles, 
   Share2, 
   RotateCw,
-  ExternalLink
+  ExternalLink,
+  Phone
 } from 'lucide-react';
 import { ShutterhausLogo } from './ShutterhausLogo';
 import alwinImg from '../assets/alwin.jpg';
@@ -47,6 +48,7 @@ FN:Alwin (Shutterhaus Visuals)
 ORG:Shutterhaus Visuals
 TITLE:Studio Founder & Lead Photographer
 EMAIL;TYPE=PREF,INTERNET:itsnotalwin@gmail.com
+TEL;TYPE=CELL,VOICE:+27730958363
 URL:https://shutterhausvisuals.mypixieset.com
 ADR;TYPE=WORK,POSTAL,PARCEL:;;Kempton Park;Gauteng;;South Africa
 NOTE:Fine-art and editorial photography studio. Established 2024.
@@ -113,7 +115,7 @@ END:VCARD`;
         </button>
 
         {/* 3D Card Wrapper */}
-        <div className="w-full relative h-[250px] sm:h-[280px] perspective-1000 group">
+        <div className="w-full relative h-[310px] sm:h-[280px] perspective-1000 group">
           <motion.div
             animate={{ rotateY: isFlipped ? 180 : 0 }}
             transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
@@ -124,7 +126,7 @@ END:VCARD`;
             {/* FRONT SIDE (Minimal & Elegant) */}
             <div 
               style={{ backfaceVisibility: 'hidden' }}
-              className="absolute inset-0 w-full h-full p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-surface-2 to-cocoa border border-sand/20 flex flex-col justify-between shadow-2xl overflow-hidden"
+              className="absolute inset-0 w-full h-full p-5 sm:p-8 rounded-2xl bg-gradient-to-br from-surface-2 to-cocoa border border-sand/20 flex flex-col justify-between shadow-2xl overflow-hidden"
             >
               {/* Decorative premium corner accents */}
               <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-sand/20 rounded-tl-2xl" />
@@ -191,43 +193,65 @@ END:VCARD`;
                 backfaceVisibility: 'hidden',
                 transform: 'rotateY(180deg)'
               }}
-              className="absolute inset-0 w-full h-full p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-cocoa to-surface-2 border border-accent-dark/20 flex flex-col justify-between shadow-2xl overflow-hidden"
+              className="absolute inset-0 w-full h-full p-4 sm:p-8 rounded-2xl bg-gradient-to-br from-cocoa to-surface-2 border border-accent-dark/20 flex flex-col justify-between shadow-2xl overflow-hidden"
             >
               {/* Back Header */}
-              <div className="flex justify-between items-center pb-3 border-b border-sand/10">
+              <div className="flex justify-between items-center pb-2.5 border-b border-sand/10">
                 <div className="flex items-center gap-2">
-                  <ShutterhausLogo variant="mark" iconSize={22} className="text-accent-dark" />
+                  <ShutterhausLogo variant="mark" iconSize={20} className="text-accent-dark" />
                   <div>
-                    <h4 className="font-serif italic text-sm text-alabaster leading-none">Shutterhaus</h4>
-                    <span className="text-[8px] font-mono tracking-widest text-[#9a9088] uppercase">Visuals</span>
+                    <h4 className="font-serif italic text-xs sm:text-sm text-alabaster leading-none">Shutterhaus</h4>
+                    <span className="text-[7px] sm:text-[8px] font-mono tracking-widest text-[#9a9088] uppercase">Visuals</span>
                   </div>
                 </div>
-                <span className="text-[8px] font-mono text-accent-dark bg-accent-dark/10 px-2 py-0.5 rounded uppercase tracking-widest">
+                <span className="text-[7px] sm:text-[8px] font-mono text-accent-dark bg-accent-dark/10 px-2 py-0.5 rounded uppercase tracking-widest">
                   Direct Contact
                 </span>
               </div>
 
               {/* Back Content Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-auto text-alabaster text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-3 my-auto text-alabaster text-left">
                 {/* Email */}
                 <div 
                   onClick={(e) => {
                     e.stopPropagation();
                     handleCopy('itsnotalwin@gmail.com', 'email');
                   }}
-                  className="flex items-center gap-2.5 p-2 rounded-lg bg-surface-1/40 hover:bg-surface-1/80 border border-sand/5 transition-all duration-200 group/item cursor-pointer"
+                  className="flex items-center gap-2 p-1.5 sm:p-2 rounded-lg bg-surface-1/40 hover:bg-surface-1/80 border border-sand/5 transition-all duration-200 group/item cursor-pointer"
                 >
-                  <div className="w-7 h-7 rounded-md bg-[#272421] flex items-center justify-center text-accent-dark shrink-0">
-                    <Mail className="w-3.5 h-3.5" />
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-[#272421] flex items-center justify-center text-accent-dark shrink-0">
+                    <Mail className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[7px] font-mono uppercase tracking-wider text-[#9a9088]">Email</p>
-                    <p className="text-[10px] sm:text-xs truncate font-medium hover:text-accent-dark transition-colors">
+                    <p className="text-[6px] sm:text-[7px] font-mono uppercase tracking-wider text-[#9a9088]">Email</p>
+                    <p className="text-[9px] sm:text-xs truncate font-medium hover:text-accent-dark transition-colors">
                       itsnotalwin@gmail.com
                     </p>
                   </div>
-                  <div className="opacity-0 group-hover/item:opacity-100 transition-opacity pr-1 text-accent-dark">
+                  <div className="opacity-0 sm:group-hover/item:opacity-100 transition-opacity pr-1 text-accent-dark">
                     {copiedText === 'email' ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopy('+27730958363', 'phone');
+                  }}
+                  className="flex items-center gap-2 p-1.5 sm:p-2 rounded-lg bg-surface-1/40 hover:bg-surface-1/80 border border-sand/5 transition-all duration-200 group/item cursor-pointer"
+                >
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-[#272421] flex items-center justify-center text-accent-dark shrink-0">
+                    <Phone className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[6px] sm:text-[7px] font-mono uppercase tracking-wider text-[#9a9088]">Phone</p>
+                    <p className="text-[9px] sm:text-xs truncate font-medium hover:text-accent-dark transition-colors">
+                      +27 73 095 8363
+                    </p>
+                  </div>
+                  <div className="opacity-0 sm:group-hover/item:opacity-100 transition-opacity pr-1 text-accent-dark">
+                    {copiedText === 'phone' ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
                   </div>
                 </div>
 
@@ -237,15 +261,34 @@ END:VCARD`;
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-2.5 p-2 rounded-lg bg-surface-1/40 hover:bg-surface-1/80 border border-sand/5 transition-all duration-200 group/item cursor-pointer"
+                  className="flex items-center gap-2 p-1.5 sm:p-2 rounded-lg bg-surface-1/40 hover:bg-surface-1/80 border border-sand/5 transition-all duration-200 group/item cursor-pointer"
                 >
-                  <div className="w-7 h-7 rounded-md bg-[#272421] flex items-center justify-center text-accent-dark shrink-0">
-                    <Globe className="w-3.5 h-3.5" />
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-[#272421] flex items-center justify-center text-accent-dark shrink-0">
+                    <Globe className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[7px] font-mono uppercase tracking-wider text-[#9a9088]">Website</p>
-                    <p className="text-[10px] sm:text-xs truncate font-medium hover:text-accent-dark transition-colors flex items-center gap-0.5">
-                      mypixieset.com <ExternalLink className="w-2 h-2 text-[#9a9088]" />
+                    <p className="text-[6px] sm:text-[7px] font-mono uppercase tracking-wider text-[#9a9088]">Website</p>
+                    <p className="text-[9px] sm:text-xs truncate font-medium hover:text-accent-dark transition-colors flex items-center gap-0.5">
+                      mypixieset.com <ExternalLink className="w-1.5 sm:w-2 h-1.5 sm:h-2 text-[#9a9088]" />
+                    </p>
+                  </div>
+                </a>
+
+                {/* Instagram */}
+                <a
+                  href="https://www.instagram.com/shutterhausvisuals/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-2 p-1.5 sm:p-2 rounded-lg bg-surface-1/40 hover:bg-surface-1/80 border border-sand/5 transition-all duration-200 group/item cursor-pointer"
+                >
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-[#272421] flex items-center justify-center text-accent-dark shrink-0">
+                    <Instagram className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[6px] sm:text-[7px] font-mono uppercase tracking-wider text-[#9a9088]">Instagram</p>
+                    <p className="text-[9px] sm:text-xs truncate font-medium hover:text-accent-dark transition-colors flex items-center gap-0.5">
+                      @shutterhausvisuals <ExternalLink className="w-1.5 sm:w-2 h-1.5 sm:h-2 text-[#9a9088]" />
                     </p>
                   </div>
                 </a>
@@ -256,44 +299,25 @@ END:VCARD`;
                     e.stopPropagation();
                     handleCopy('Kempton Park, Gauteng, South Africa', 'location');
                   }}
-                  className="flex items-center gap-2.5 p-2 rounded-lg bg-surface-1/40 hover:bg-surface-1/80 border border-sand/5 transition-all duration-200 group/item cursor-pointer"
+                  className="flex items-center gap-2 p-1.5 sm:p-2 rounded-lg bg-surface-1/40 hover:bg-surface-1/80 border border-sand/5 transition-all duration-200 group/item cursor-pointer sm:col-span-2"
                 >
-                  <div className="w-7 h-7 rounded-md bg-[#272421] flex items-center justify-center text-accent-dark shrink-0">
-                    <MapPin className="w-3.5 h-3.5" />
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-[#272421] flex items-center justify-center text-accent-dark shrink-0">
+                    <MapPin className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[7px] font-mono uppercase tracking-wider text-[#9a9088]">Location</p>
-                    <p className="text-[10px] sm:text-xs truncate font-medium">
+                    <p className="text-[6px] sm:text-[7px] font-mono uppercase tracking-wider text-[#9a9088]">Location</p>
+                    <p className="text-[9px] sm:text-xs truncate font-medium">
                       Kempton Park, South Africa
                     </p>
                   </div>
-                  <div className="opacity-0 group-hover/item:opacity-100 transition-opacity pr-1 text-accent-dark">
+                  <div className="opacity-0 sm:group-hover/item:opacity-100 transition-opacity pr-1 text-accent-dark">
                     {copiedText === 'location' ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
                   </div>
                 </div>
-
-                {/* Instagram */}
-                <a
-                  href="https://www.instagram.com/shutterhausvisuals/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-2.5 p-2 rounded-lg bg-surface-1/40 hover:bg-surface-1/80 border border-sand/5 transition-all duration-200 group/item cursor-pointer"
-                >
-                  <div className="w-7 h-7 rounded-md bg-[#272421] flex items-center justify-center text-accent-dark shrink-0">
-                    <Instagram className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[7px] font-mono uppercase tracking-wider text-[#9a9088]">Instagram</p>
-                    <p className="text-[10px] sm:text-xs truncate font-medium hover:text-accent-dark transition-colors flex items-center gap-0.5">
-                      @shutterhausvisuals <ExternalLink className="w-2 h-2 text-[#9a9088]" />
-                    </p>
-                  </div>
-                </a>
               </div>
 
               {/* Back Footer */}
-              <div className="flex justify-between items-center text-[8px] font-mono text-[#9a9088] pt-2 border-t border-sand/10">
+              <div className="flex justify-between items-center text-[7px] sm:text-[8px] font-mono text-[#9a9088] pt-2 border-t border-sand/10">
                 <span>© 2026 Shutterhaus Visuals</span>
                 <span className="uppercase tracking-widest text-accent-dark hover:underline flex items-center gap-1">
                   Tap to flip <RotateCw className="w-2.5 h-2.5" />
