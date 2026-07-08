@@ -31,6 +31,7 @@ import ImageUploader from "./components/ImageUploader";
 import BookingCalendar from "./components/BookingCalendar";
 import { ShutterhausLogo } from "./components/ShutterhausLogo";
 import { StartupScreen } from "./components/StartupScreen";
+import DigitalBusinessCard from "./components/DigitalBusinessCard";
 import { ResponsiveImage } from "./components/ResponsiveImage";
 import { paintArtOnCanvas } from "./utils/paintArt";
 import { db } from "./firebase";
@@ -106,6 +107,9 @@ export default function App() {
 
   // Mobile drawer menu state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Digital business card modal state
+  const [isBusinessCardOpen, setIsBusinessCardOpen] = useState(false);
 
   // Responsive screen states for portfolio collapsible view
   const [isMobile, setIsMobile] = useState(false);
@@ -1601,7 +1605,16 @@ export default function App() {
           />
         </Link>
 
-        <ul className="flex gap-6 text-[10px] font-mono uppercase tracking-wider text-[#7c7265] dark:text-[#9a9088]">
+        <ul className="flex gap-6 text-[10px] font-mono uppercase tracking-wider text-[#7c7265] dark:text-[#9a9088] items-center flex-wrap justify-center md:justify-end">
+          <li>
+            <button
+              onClick={() => setIsBusinessCardOpen(true)}
+              className="hover:text-espresso dark:hover:text-alabaster transition-colors cursor-hover flex items-center gap-1.5 font-bold"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-accent-light dark:text-accent-dark animate-pulse" />
+              <span>Digital Card</span>
+            </button>
+          </li>
           <li>
             <a
               href="https://www.instagram.com/shutterhausvisuals/"
@@ -1656,6 +1669,13 @@ export default function App() {
           onClose={() => setIsUploadOpen(false)}
         />
       )}
+
+      {/* DIGITAL BUSINESS CARD MODAL */}
+      <AnimatePresence>
+        {isBusinessCardOpen && (
+          <DigitalBusinessCard onClose={() => setIsBusinessCardOpen(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
