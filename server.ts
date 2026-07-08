@@ -236,10 +236,21 @@ async function startServer() {
       server: { middlewareMode: true },
       appType: "spa",
     });
+    // Redirect /card to /card.html so Vite middleware resolves it
+    app.get('/card', (req, res, next) => {
+      req.url = '/card.html';
+      next();
+    });
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
+    
+    // Serve standalone digital card
+    app.get(['/card', '/card.html'], (req, res) => {
+      res.sendFile(path.join(distPath, 'card.html'));
+    });
+
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });

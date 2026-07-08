@@ -63,10 +63,11 @@ END:VCARD`;
   };
 
   const handleShare = async () => {
+    const cardUrl = "https://itsnotalwin.github.io/Shutterhaus-Visuals/card";
     const shareData = {
       title: 'Shutterhaus Visuals - Alwin',
       text: 'Check out Shutterhaus Visuals, a premium fine-art and editorial photography studio in Kempton Park, South Africa.',
-      url: window.location.origin
+      url: cardUrl
     };
 
     if (navigator.share) {
@@ -77,7 +78,7 @@ END:VCARD`;
       }
     } else {
       // Fallback: Copy URL to clipboard
-      navigator.clipboard.writeText(window.location.origin);
+      navigator.clipboard.writeText(cardUrl);
       setIsSharing(true);
       setTimeout(() => setIsSharing(false), 2000);
     }
