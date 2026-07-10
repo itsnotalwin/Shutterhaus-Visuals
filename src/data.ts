@@ -3,9 +3,7 @@ import img1 from './assets/images/golden_hour_embrace_1782310479605.jpg';
 import img2 from './assets/images/confident_gaze_portrait_1782310494064.jpg';
 import img3 from './assets/images/family_generations_1782310506742.jpg';
 import img4 from './assets/images/matric_elegance_1782310520668.jpg';
-import img5 from './assets/images/intimate_shadows_boudoir_1782310533874.jpg';
 import img6 from './assets/images/editorial_edge_1782310547540.jpg';
-import img7 from './assets/images/unspoken_frame_boudoir_1782310561368.jpg';
 import img8 from './assets/images/family_essence_1782310575087.jpg';
 import img9 from './assets/images/event_celebration_1782310588063.jpg';
 
@@ -30,13 +28,6 @@ export const SERVICES_DATA: Service[] = [
     name: 'Events & Occasions',
     detail: 'Documenting the joy and high energy of your milestone celebrations with a cinematic, unobtrusive approach.',
     bullets: ['Matric Farewells', 'Birthdays & Anniversaries', 'Intimate Weddings', 'Corporate Functions']
-  },
-  {
-    id: 'svc-4',
-    num: '04',
-    name: 'Studio & Boudoir',
-    detail: 'Professional studio lighting and tasteful, empowering boudoir sessions focused on elegance, contrast, and confidence.',
-    bullets: ['Professional Headshots', 'Sultry Boudoir', 'Creative Studio Concepts', 'Editorial Profiles']
   }
 ];
 
@@ -110,23 +101,6 @@ export const PORTFOLIO_DATA: PortfolioItem[] = [
     }
   },
   {
-    id: 'port-5',
-    title: 'Intimate Shadows',
-    category: 'boudoir',
-    year: '2024',
-    location: 'Private Studio',
-    imageUrl: img5,
-    description: 'A tasteful, empowering fine-art boudoir portrait exploring the interplay of soft natural light and deep shadows.',
-    dimensions: 'Private Collection',
-    cameraSettings: {
-      camera: 'Fujifilm GFX 100S',
-      lens: 'GF 63mm f/2.8 R WR',
-      aperture: 'f/2.8',
-      shutterSpeed: '1/125s',
-      iso: '400'
-    }
-  },
-  {
     id: 'port-6',
     title: 'Editorial Edge',
     category: 'editorial',
@@ -141,23 +115,6 @@ export const PORTFOLIO_DATA: PortfolioItem[] = [
       aperture: 'f/8.0',
       shutterSpeed: '1/250s',
       iso: '100'
-    }
-  },
-  {
-    id: 'port-7',
-    title: 'The Unspoken Frame',
-    category: 'boudoir',
-    year: '2023',
-    location: 'Cape Town, ZA',
-    imageUrl: img7,
-    description: 'A raw, emotive boudoir portrait focusing on silhouette and dramatic lighting.',
-    dimensions: 'Private Collection',
-    cameraSettings: {
-      camera: 'Sony A7R IV',
-      lens: 'Sony FE 35mm f/1.4 GM',
-      aperture: 'f/2.0',
-      shutterSpeed: '1/200s',
-      iso: '400'
     }
   },
   {
@@ -288,23 +245,6 @@ export const PRICING_PACKAGES_DATA: PricingPackage[] = [
     ],
     isPopular: false,
     idealFor: 'Standard couples, individual headshots, and professional personal lookbooks.'
-  },
-  {
-    id: 'pkg-5',
-    name: 'Sultry Boudoir',
-    priceZar: 3500,
-    duration: '2 Hours',
-    imagesCount: '25 retouched photos',
-    features: [
-      'Private indoor studio session',
-      'Professional posing & creative guidance',
-      'Sensual high-contrast lighting setups',
-      'Private online gallery',
-      '7-day confidential delivery',
-      'Includes professional retouching'
-    ],
-    isPopular: false,
-    idealFor: 'Intimate, empowering, confidential and beautifully raw personal boudoir sessions.'
   }
 ];
 

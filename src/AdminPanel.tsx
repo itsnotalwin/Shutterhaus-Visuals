@@ -358,7 +358,7 @@ function PortfolioManager() {
   
   // Form states
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<'portrait' | 'boudoir' | 'family' | 'event' | 'editorial'>('editorial');
+  const [category, setCategory] = useState<'portrait' | 'family' | 'event' | 'editorial'>('editorial');
   const [year, setYear] = useState('2026');
   const [location, setLocation] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -507,16 +507,7 @@ function PortfolioManager() {
       lens: '150mm Blue Ring'
     },
     {
-      category: 'boudoir' as const,
-      name: 'Lace & Light Shadows',
-      url: 'https://images.unsplash.com/photo-1522845015757-50bce044e5da?auto=format&fit=crop&q=80',
-      location: 'Sonder Penthouse',
-      desc: 'Intimate fine-art study highlighting graceful profiles, linen, and warm lace texture.',
-      camera: 'Leica M11',
-      lens: 'Noctilux-M 50mm'
-    },
-    {
-      category: 'boudoir' as const,
+      category: 'editorial' as const,
       name: 'Warm Sunset Silk',
       url: 'https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?auto=format&fit=crop&q=80',
       location: 'Chateau Suite',
@@ -608,7 +599,7 @@ function PortfolioManager() {
                       }
                     },
                     {
-                      text: "Analyze this image and return an SEO-optimized JSON object suitable for a premium photography portfolio website. The response must contain a captivating, elegant 'title'; a single 'category' that matches exactly one of ['portrait', 'boudoir', 'family', 'event', 'editorial']; a refined, 1-2 sentence search-optimized 'description' capturing the mood, depth, and aesthetics; and an array of 3 to 5 'seoKeywords' representing the photo tags. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\", \"seoKeywords\": [...] }"
+                      text: "Analyze this image and return an SEO-optimized JSON object suitable for a premium photography portfolio website. The response must contain a captivating, elegant 'title'; a single 'category' that matches exactly one of ['portrait', 'family', 'event', 'editorial']; a refined, 1-2 sentence search-optimized 'description' capturing the mood, depth, and aesthetics; and an array of 3 to 5 'seoKeywords' representing the photo tags. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\", \"seoKeywords\": [...] }"
                     }
                   ]
                 }
@@ -670,7 +661,7 @@ function PortfolioManager() {
                   content: [
                     {
                       type: "text",
-                      text: "Analyze this image and return a JSON object with a suitable title, category (must be exactly one of: 'portrait', 'boudoir', 'family', 'event', 'editorial'), and a short 1-2 sentence description for a fine-art photography portfolio. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\" }"
+                      text: "Analyze this image and return a JSON object with a suitable title, category (must be exactly one of: 'portrait', 'family', 'event', 'editorial'), and a short 1-2 sentence description for a fine-art photography portfolio. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\" }"
                     },
                     {
                       type: "image_url",
@@ -844,7 +835,7 @@ function PortfolioManager() {
                         }
                       },
                       {
-                        text: "Analyze this image and return an SEO-optimized JSON object suitable for a premium photography portfolio website. The response must contain a captivating, elegant 'title'; a single 'category' that matches exactly one of ['portrait', 'boudoir', 'family', 'event', 'editorial']; a refined, 1-2 sentence search-optimized 'description' capturing the mood, depth, and aesthetics; and an array of 3 to 5 'seoKeywords' representing the photo tags. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\", \"seoKeywords\": [...] }"
+                        text: "Analyze this image and return an SEO-optimized JSON object suitable for a premium photography portfolio website. The response must contain a captivating, elegant 'title'; a single 'category' that matches exactly one of ['portrait', 'family', 'event', 'editorial']; a refined, 1-2 sentence search-optimized 'description' capturing the mood, depth, and aesthetics; and an array of 3 to 5 'seoKeywords' representing the photo tags. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\", \"seoKeywords\": [...] }"
                       }
                     ]
                   }
@@ -908,7 +899,7 @@ function PortfolioManager() {
                     content: [
                       {
                         type: "text",
-                        text: "Analyze this image and return a JSON object with a suitable title, category (must be exactly one of: 'portrait', 'boudoir', 'family', 'event', 'editorial'), and a short 1-2 sentence description for a fine-art photography portfolio. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\" }"
+                        text: "Analyze this image and return a JSON object with a suitable title, category (must be exactly one of: 'portrait', 'family', 'event', 'editorial'), and a short 1-2 sentence description for a fine-art photography portfolio. Return ONLY the JSON object, nothing else. Format: { \"title\": \"...\", \"category\": \"...\", \"description\": \"...\" }"
                       },
                       {
                         type: "image_url",
@@ -1409,7 +1400,6 @@ function PortfolioManager() {
                   >
                     <option value="portrait">Portrait & Profile</option>
                     <option value="editorial">Editorial & Haute Couture</option>
-                    <option value="boudoir">Boudoir & Fine Art Shadow</option>
                     <option value="family">Family & Legacy Essence</option>
                     <option value="event">Event & Gala Celebration</option>
                   </select>
@@ -1787,7 +1777,6 @@ function PortfolioManager() {
                           >
                             <option value="editorial">Editorial</option>
                             <option value="portrait">Portrait</option>
-                            <option value="boudoir">Boudoir</option>
                             <option value="family">Family</option>
                             <option value="event">Event</option>
                           </select>
@@ -2669,7 +2658,6 @@ function BookingsManager() {
                     className="w-full bg-white dark:bg-surface-1 border border-sand dark:border-dark-border p-2 text-xs font-sans text-espresso dark:text-alabaster rounded-none focus:outline-none focus:border-accent-light"
                   >
                     <option value="Portrait Fine Art Session">Portrait Fine Art Session</option>
-                    <option value="Boudoir & Intimate Portraiture">Boudoir & Intimate Portraiture</option>
                     <option value="Family & Heritage Session">Family & Heritage Session</option>
                     <option value="Events — Corporate Booking">Events — Corporate Booking</option>
                     <option value="Commercial — Campaign Booking">Commercial — Campaign Booking</option>

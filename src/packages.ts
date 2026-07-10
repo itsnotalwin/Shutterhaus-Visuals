@@ -81,23 +81,5 @@ export const LOCAL_PACKAGES: LocalPackage[] = [
     isPopular: false,
     idealFor:
       "Standard couples, individual headshots, and professional personal lookbooks.",
-  },
-  {
-    id: "pkg-5",
-    name: "Sultry Boudoir",
-    priceZar: 6500,
-    priceRetainerZar: 5200,
-    duration: "2 Hours &bull; Private Studio",
-    imagesCount: "20 retouched photos",
-    features: [
-      "20 Premium retouched assets",
-      "Professional posing & creative guidance",
-      "Sensual high-contrast lighting setups",
-      "Private online gallery",
-      "7-day confidential delivery",
-    ],
-    isPopular: false,
-    idealFor:
-      "Intimate, empowering, confidential and beautifully raw personal boudoir sessions.",
   }
 ];

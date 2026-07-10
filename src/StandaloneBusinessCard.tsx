@@ -387,7 +387,7 @@ END:VCARD`;
                   <span className="text-[8px] font-mono text-accent-dark uppercase tracking-widest block">Est. 2024</span>
                   <h3 className="font-serif text-xl italic font-light text-alabaster">Fine-Art and Editorial Photography Studio</h3>
                   <p className="text-xs text-[#9a9088] leading-relaxed font-light">
-                    Shutterhaus Visuals is dedicated to archival studies in light, contrast, and raw human connection. We specialize in intimate portraiture, premium editorial campaigns, elegant boudoir, and curated milestone events.
+                    Shutterhaus Visuals is dedicated to archival studies in light, contrast, and raw human connection. We specialize in intimate portraiture, premium editorial campaigns, and curated milestone events.
                   </p>
                 </div>
 

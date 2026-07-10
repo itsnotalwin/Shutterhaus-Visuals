@@ -1,4 +1,4 @@
-export type Category = 'all' | 'portrait' | 'boudoir' | 'family' | 'event' | 'editorial';
+export type Category = 'all' | 'portrait' | 'family' | 'event' | 'editorial';
 
 export interface PortfolioItem {
   id: string;

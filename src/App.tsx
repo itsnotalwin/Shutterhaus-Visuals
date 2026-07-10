@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 
 import { PortfolioItem, Category, Message, Booking } from "./types";
-import { PORTFOLIO_DATA, SERVICES_DATA } from "./data";
+import { PORTFOLIO_DATA } from "./data";
 import Lightbox from "./components/Lightbox";
 import ImageUploader from "./components/ImageUploader";
 import BookingCalendar from "./components/BookingCalendar";
@@ -346,7 +346,6 @@ export default function App() {
     else if (packageName.includes("Family")) mappedPackage = "Family Shoots";
     else if (packageName.includes("Studio"))
       mappedPackage = "Studio Portraiture";
-    else if (packageName.includes("Boudoir")) mappedPackage = "Sultry Boudoir";
     else if (
       packageName.includes("Natural Light") ||
       packageName.includes("Basic")
@@ -537,13 +536,6 @@ export default function App() {
               </Link>
             </li>
             <li>
-              <Link to="/services"
-                className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors"
-              >
-                Services
-              </Link>
-            </li>
-            <li>
               <Link to="/work"
                 className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors"
               >
@@ -555,13 +547,6 @@ export default function App() {
                 className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors"
               >
                 Pricing
-              </Link>
-            </li>
-            <li>
-              <Link to="/about"
-                className="text-[#7c7265] dark:text-[#9a9082] hover:text-espresso dark:hover:text-alabaster transition-colors"
-              >
-                About
               </Link>
             </li>
             <li>
@@ -649,14 +634,6 @@ export default function App() {
                 </Link>
               </li>
               <li>
-                <Link to="/services"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block py-1.5 border-b border-sand/30 dark:border-dark-border/30"
-                >
-                  01 // Services
-                </Link>
-              </li>
-              <li>
                 <Link to="/work"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block py-1.5 border-b border-sand/30 dark:border-dark-border/30"
@@ -670,14 +647,6 @@ export default function App() {
                   className="block py-1.5 border-b border-sand/30 dark:border-dark-border/30"
                 >
                   03 // Pricing & Estimations
-                </Link>
-              </li>
-              <li>
-                <Link to="/about"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block py-1.5 border-b border-sand/30 dark:border-dark-border/30"
-                >
-                  04 // Team & About
                 </Link>
               </li>
               <li>
@@ -837,60 +806,6 @@ export default function App() {
         </>
       )}
 
-      {/* SERVICES SECTION */}
-      {(path === "/" || path === "/services") && (
-      <section
-        id="services"
-        className={`px-6 md:px-12 ${path === "/" ? "py-24" : "pt-40 pb-24 min-h-[100vh]"} border-t border-sand dark:border-dark-border max-w-7xl mx-auto relative`}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end mb-16">
-          <div className="lg:col-span-5 space-y-2">
-            <span className="text-[10px] font-mono tracking-[0.2em] text-[#7c7265] dark:text-[#9a9088] uppercase block">
-              Our Expertise
-            </span>
-            <h2 className="text-3xl md:text-5xl font-serif italic font-light tracking-tight text-espresso dark:text-alabaster">
-              The craft,
-              <br />
-              broken down
-              <br />
-              into focus areas.
-            </h2>
-          </div>
-          <div className="lg:col-span-7">
-            
-          </div>
-        </div>
-
-        {/* Interactive service list lines */}
-        <div className="border-t border-sand dark:border-dark-border relative">
-          {SERVICES_DATA.map((svc) => (
-            <div
-              key={svc.id}
-              className="svrow border-b border-sand dark:border-dark-border py-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all duration-300 ease-expo cursor-hover"
-              onClick={() =>
-                handleSelectPackageForBooking(
-                  svc.name,
-                  `Disciplines: ${svc.bullets.join(", ")}`,
-                )
-              }
-            >
-              <div className="flex items-baseline gap-6 md:gap-12">
-                <span className="text-[11px] font-mono text-accent-light dark:text-accent-dark font-bold">
-                  {svc.num}
-                </span>
-                <h3 className="text-xl md:text-3xl font-serif italic font-light text-espresso dark:text-alabaster transition-colors duration-300 group-hover:text-accent-light">
-                  {svc.name}
-                </h3>
-              </div>
-              <p className="text-xs text-[#7c7265] dark:text-[#9a9088] font-light max-w-sm md:text-right leading-relaxed">
-                {svc.detail}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-      )}
-
       {/* PORTFOLIO WORK SECTION */}
       {(path === "/" || path === "/work") && (
       <section
@@ -933,7 +848,6 @@ export default function App() {
             [
               "all",
               "portrait",
-              "boudoir",
               "family",
               "event",
               "editorial",
@@ -1064,87 +978,6 @@ export default function App() {
             </button>
           </div>
         )}
-      </section>
-      )}
-
-      {/* ABOUT & LEAD PHOTOGRAPHER SECTION */}
-      {(path === "/" || path === "/about") && (
-      <section
-        id="about"
-        className={`px-6 md:px-12 ${path === "/" ? "py-24" : "pt-40 pb-24 min-h-[100vh]"} border-t border-sand dark:border-dark-border max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center`}
-      >
-        {/* Curved portrait wrap */}
-        <div className="lg:col-span-5 relative group overflow-hidden border border-sand dark:border-dark-border aspect-[3/4] bg-oatmeal dark:bg-surface-2">
-          <ResponsiveImage
-            src="https://drive.google.com/thumbnail?id=1dGo1hDouUsBn3CLQsB5cz-Ji40wzxgAI&sz=w1000"
-            alt="Lead photographer Alwin"
-            className="w-full h-full object-cover filter grayscale contrast-110 sepia-[0.1] group-hover:scale-[1.03]"
-            onError={(e: any) => {
-              (e.target as HTMLImageElement).src =
-                "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?q=80&w=800&auto=format&fit=crop";
-            }}
-          />
-          <div className="absolute bottom-4 left-4 right-4 bg-oatmeal/90 dark:bg-cocoa/90 border border-sand dark:border-dark-border p-4 z-20 font-mono">
-            <p className="text-[9px] uppercase tracking-wider text-accent-light dark:text-accent-dark font-bold">
-              Studio Founder
-            </p>
-            <span className="text-xs font-semibold uppercase block mt-1">
-              Alwin &bull; Est. 2024
-            </span>
-          </div>
-        </div>
-
-        {/* Narrative & stats counters */}
-        <div className="lg:col-span-7 space-y-8">
-          <div className="space-y-2">
-            <span className="text-[10px] font-mono tracking-[0.2em] text-[#7c7265] dark:text-[#9a9088] uppercase block">
-              The Visionary
-            </span>
-            <h2 className="text-xl md:text-3xl font-serif italic font-light leading-relaxed text-espresso dark:text-alabaster">
-              Behind the lens at Shutterhaus.
-            </h2>
-          </div>
-
-          <div className="text-xs md:text-sm text-[#7c7265] dark:text-[#9a9088] leading-relaxed font-light space-y-4 font-sans">
-            <p>
-              Shutterhaus is a luxury photography studio built on one belief: the most powerful images are the ones you don't have to explain.
-            </p>
-            <p>
-              We don't just "take photos." We shape light with intention, read how people hold themselves, and wait for the exact moment the mask drops and the real person underneath breathes.
-            </p>
-            <p>
-              That's the fine-art difference. We aren't looking for "smiles" — we're looking for truth: the kind that shows up once, means something, and is gone before you can ask it to stay. Three years in. Kempton Park roots. One obsession.
-            </p>
-          </div>
-
-          {/* Seeded Counting Stats Grid */}
-          <div className="grid grid-cols-3 gap-6 pt-8 border-t border-sand dark:border-dark-border font-mono">
-            <div className="space-y-1">
-              <span className="text-2xl md:text-4xl font-serif italic text-accent-light dark:text-accent-dark block">
-                {animatedStats.projects}
-              </span>
-              <p className="text-[9px] uppercase text-[#7c7265] dark:text-[#9a9088] tracking-widest">
-                Completed Products
-              </p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-2xl md:text-4xl font-serif italic text-accent-light dark:text-accent-dark block">
-                {animatedStats.years}
-              </span>
-              <p className="text-[9px] uppercase text-[#7c7265] dark:text-[#9a9088] tracking-widest">
-                Years Active
-              </p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-2xl md:text-4xl font-serif italic text-accent-light dark:text-accent-dark block">
-                {animatedStats.countries}
-              </span>
-              <p className="text-[9px] uppercase text-[#7c7265] dark:text-[#9a9088] tracking-widest">
-                Countries Shot
-              </p>
-            </div>
-          </div>
-        </div>
       </section>
       )}
 
@@ -1539,9 +1372,6 @@ export default function App() {
                       </option>
                       <option value="Portrait — Studio Portraiture (R1,850)">
                         Portrait — Studio Portraiture (R1,850)
-                      </option>
-                      <option value="Portrait — Sultry Boudoir (R3,500)">
-                        Portrait — Sultry Boudoir (R3,500)
                       </option>
                       <option value="Events — Corporate Booking">
                         Events & Occasions Coverage
