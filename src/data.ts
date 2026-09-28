@@ -7,6 +7,27 @@ import img6 from './assets/images/editorial_edge_1782310547540.jpg';
 import img8 from './assets/images/family_essence_1782310575087.jpg';
 import img9 from './assets/images/event_celebration_1782310588063.jpg';
 
+// CHANELLE editorial series — real EXIF pulled from the source files
+// (Canon EOS 4000D, EF-S18-55mm f/3.5-5.6 IS STM), not invented gear.
+import chanVerdant from './assets/images/chanelle_verdant_gaze.jpg';
+import chanNoir from './assets/images/chanelle_noir_confidence.jpg';
+import chanSoft from './assets/images/chanelle_soft_light.jpg';
+import chanWind from './assets/images/chanelle_wind_street.jpg';
+import chanGarden from './assets/images/chanelle_garden_thought.jpg';
+import chanStairs from './assets/images/chanelle_steel_stairs.jpg';
+import chanWinter from './assets/images/chanelle_golden_winter.jpg';
+import chanLowlight from './assets/images/chanelle_lowlight_studio.jpg';
+
+// Uncropped originals for the lightbox (whole composition, not the grid crop).
+import chanVerdantFull from './assets/images/chanelle_verdant_gaze_full.jpg';
+import chanNoirFull from './assets/images/chanelle_noir_confidence_full.jpg';
+import chanSoftFull from './assets/images/chanelle_soft_light_full.jpg';
+import chanWindFull from './assets/images/chanelle_wind_street_full.jpg';
+import chanGardenFull from './assets/images/chanelle_garden_thought_full.jpg';
+import chanStairsFull from './assets/images/chanelle_steel_stairs_full.jpg';
+import chanWinterFull from './assets/images/chanelle_golden_winter_full.jpg';
+import chanLowlightFull from './assets/images/chanelle_lowlight_studio_full.jpg';
+
 export const SERVICES_DATA: Service[] = [
   {
     id: 'svc-1',
@@ -32,6 +53,154 @@ export const SERVICES_DATA: Service[] = [
 ];
 
 export const PORTFOLIO_DATA: PortfolioItem[] = [
+  // --- CHANELLE editorial series (2025) ---------------------------------
+  // Settings below are read from each file's own EXIF, not invented.
+  {
+    id: 'chanelle-verdant-gaze',
+    title: 'Verdant Gaze',
+    category: 'editorial',
+    year: '2025',
+    location: 'Kempton Park, ZA',
+    imageUrl: chanVerdant,
+    fullImageUrl: chanVerdantFull,
+    description: 'Direct gaze against a saturated green wall, hand raised to the frame — a study in colour confidence and stillness.',
+    dimensions: 'Digital & 8"x10" Print',
+    cameraSettings: {
+      camera: 'Canon EOS 4000D',
+      lens: 'EF-S18-55mm f/3.5-5.6 IS STM',
+      aperture: 'f/8',
+      shutterSpeed: '1/60s',
+      iso: '1600'
+    }
+  },
+  {
+    id: 'chanelle-noir-confidence',
+    title: 'Noir Confidence',
+    category: 'editorial',
+    year: '2025',
+    location: 'Johannesburg, ZA',
+    imageUrl: chanNoir,
+    fullImageUrl: chanNoirFull,
+    description: 'High-contrast monochrome street portrait, leather and denim rendered in deep shadow and hard winter light.',
+    dimensions: 'Digital & 11"x14" Print',
+    cameraSettings: {
+      camera: 'Canon EOS 4000D',
+      lens: 'EF-S18-55mm f/3.5-5.6 IS STM',
+      aperture: 'f/5.6',
+      shutterSpeed: '1/1250s',
+      iso: '100'
+    }
+  },
+  {
+    id: 'chanelle-soft-light',
+    title: 'Soft Light',
+    category: 'portrait',
+    year: '2025',
+    location: 'Johannesburg, ZA',
+    imageUrl: chanSoft,
+    fullImageUrl: chanSoftFull,
+    description: 'Warm falloff across the face, hand resting at the throat — an intimate beauty portrait held in a single breath.',
+    dimensions: 'Digital & 8"x10" Print',
+    cameraSettings: {
+      camera: 'Canon EOS 4000D',
+      lens: 'EF-S18-55mm f/3.5-5.6 IS STM',
+      aperture: 'f/5.6',
+      shutterSpeed: '1/250s',
+      iso: '100'
+    }
+  },
+  {
+    id: 'chanelle-wind-street',
+    title: 'Wind Street',
+    category: 'editorial',
+    year: '2025',
+    location: 'Johannesburg, ZA',
+    imageUrl: chanWind,
+    fullImageUrl: chanWindFull,
+    description: 'Winter wind caught mid-gesture, monochrome frame holding the raw edge of a street portrait.',
+    dimensions: 'Digital & 11"x14" Print',
+    cameraSettings: {
+      camera: 'Canon EOS 4000D',
+      lens: 'EF-S18-55mm f/3.5-5.6 IS STM',
+      aperture: 'f/5.6',
+      shutterSpeed: '1/1250s',
+      iso: '100'
+    }
+  },
+  {
+    id: 'chanelle-garden-thought',
+    title: 'Garden Thought',
+    category: 'portrait',
+    year: '2026',
+    location: 'Gauteng, ZA',
+    imageUrl: chanGarden,
+    fullImageUrl: chanGardenFull,
+    description: 'Long lens, low sun, subject turned from the light — a quiet portrait suspended in late-summer warmth.',
+    dimensions: 'Digital & 8"x10" Print',
+    cameraSettings: {
+      camera: 'Canon EOS 4000D',
+      lens: 'EF-S18-55mm f/3.5-5.6 IS STM',
+      aperture: 'f/5.6',
+      shutterSpeed: '1/30s',
+      iso: '100'
+    }
+  },
+  {
+    id: 'chanelle-steel-stairs',
+    title: 'Steel Stairs',
+    category: 'editorial',
+    year: '2025',
+    location: 'Johannesburg, ZA',
+    imageUrl: chanStairs,
+    fullImageUrl: chanStairsFull,
+    description: 'Seated against painted steel, wide open at f/4 — architectural lines holding a still, unguarded frame.',
+    dimensions: 'Digital & 8"x10" Print',
+    cameraSettings: {
+      camera: 'Canon EOS 4000D',
+      lens: 'EF-S18-55mm f/3.5-5.6 IS STM',
+      aperture: 'f/4',
+      shutterSpeed: '1/500s',
+      iso: '100'
+    }
+  },
+  {
+    id: 'chanelle-golden-winter',
+    title: 'Golden Winter',
+    category: 'portrait',
+    year: '2025',
+    location: 'Johannesburg, ZA',
+    imageUrl: chanWinter,
+    fullImageUrl: chanWinterFull,
+    description: 'Backlit winter sun flaring behind the shoulder, hair rimmed in gold against a cold city street.',
+    dimensions: 'Digital & 8"x10" Print',
+    cameraSettings: {
+      camera: 'Canon EOS 4000D',
+      lens: 'EF-S18-55mm f/3.5-5.6 IS STM',
+      aperture: 'f/5.6',
+      shutterSpeed: '1/400s',
+      iso: '100'
+    }
+  },
+  {
+    id: 'chanelle-lowlight-studio',
+    title: 'Lowlight',
+    category: 'editorial',
+    year: '2026',
+    location: 'Kempton Park, ZA',
+    imageUrl: chanLowlight,
+    fullImageUrl: chanLowlightFull,
+    description: 'Pushed to ISO 1600 in a dim structure, grain and falloff doing the work that light could not.',
+    dimensions: 'Digital & 11"x14" Print',
+    cameraSettings: {
+      camera: 'Canon EOS 4000D',
+      lens: 'EF-S18-55mm f/3.5-5.6 IS STM',
+      aperture: 'f/7.1',
+      shutterSpeed: '1/60s',
+      iso: '1600'
+    }
+  },
+
+  // --- Existing collections --------------------------------------------
   {
     id: 'port-1',
     title: 'Golden Hour Embrace',

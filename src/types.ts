@@ -7,6 +7,10 @@ export interface PortfolioItem {
   year: string;
   location: string;
   imageUrl: string;
+  // Optional uncropped original for the lightbox. The card crop is tuned for the
+  // masonry grid, so zooming into that same file shows a trimmed composition —
+  // for a photography portfolio the visitor should see the whole frame.
+  fullImageUrl?: string;
   description: string;
   dimensions: string;
   cameraSettings: {

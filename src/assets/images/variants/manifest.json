@@ -1,92 +1,164 @@
 {
   "app_icon_photography_1782250263315.jpg": {
-    "widths": {
-      "400": "variants/app_icon_photography_1782250263315-400w.webp",
-      "800": "variants/app_icon_photography_1782250263315-800w.webp",
-      "1200": "variants/app_icon_photography_1782250263315-1200w.webp"
-    },
+    "srcHeight": 768,
     "srcWidth": 1408,
-    "srcHeight": 768
+    "widths": {
+      "1200": "variants/app_icon_photography_1782250263315-1200w.webp",
+      "400": "variants/app_icon_photography_1782250263315-400w.webp",
+      "800": "variants/app_icon_photography_1782250263315-800w.webp"
+    }
+  },
+  "chanelle_garden_thought.jpg": {
+    "srcHeight": 1600,
+    "srcWidth": 1600,
+    "widths": {
+      "1200": "variants/chanelle_garden_thought-1200w.webp",
+      "400": "variants/chanelle_garden_thought-400w.webp",
+      "800": "variants/chanelle_garden_thought-800w.webp"
+    }
+  },
+  "chanelle_golden_winter.jpg": {
+    "srcHeight": 1067,
+    "srcWidth": 1600,
+    "widths": {
+      "1200": "variants/chanelle_golden_winter-1200w.webp",
+      "400": "variants/chanelle_golden_winter-400w.webp",
+      "800": "variants/chanelle_golden_winter-800w.webp"
+    }
+  },
+  "chanelle_lowlight_studio.jpg": {
+    "srcHeight": 2000,
+    "srcWidth": 1600,
+    "widths": {
+      "1200": "variants/chanelle_lowlight_studio-1200w.webp",
+      "400": "variants/chanelle_lowlight_studio-400w.webp",
+      "800": "variants/chanelle_lowlight_studio-800w.webp"
+    }
+  },
+  "chanelle_noir_confidence.jpg": {
+    "srcHeight": 1067,
+    "srcWidth": 1600,
+    "widths": {
+      "1200": "variants/chanelle_noir_confidence-1200w.webp",
+      "400": "variants/chanelle_noir_confidence-400w.webp",
+      "800": "variants/chanelle_noir_confidence-800w.webp"
+    }
+  },
+  "chanelle_soft_light.jpg": {
+    "srcHeight": 2000,
+    "srcWidth": 1600,
+    "widths": {
+      "1200": "variants/chanelle_soft_light-1200w.webp",
+      "400": "variants/chanelle_soft_light-400w.webp",
+      "800": "variants/chanelle_soft_light-800w.webp"
+    }
+  },
+  "chanelle_steel_stairs.jpg": {
+    "srcHeight": 2000,
+    "srcWidth": 1600,
+    "widths": {
+      "1200": "variants/chanelle_steel_stairs-1200w.webp",
+      "400": "variants/chanelle_steel_stairs-400w.webp",
+      "800": "variants/chanelle_steel_stairs-800w.webp"
+    }
+  },
+  "chanelle_verdant_gaze.jpg": {
+    "srcHeight": 2000,
+    "srcWidth": 1600,
+    "widths": {
+      "1200": "variants/chanelle_verdant_gaze-1200w.webp",
+      "400": "variants/chanelle_verdant_gaze-400w.webp",
+      "800": "variants/chanelle_verdant_gaze-800w.webp"
+    }
+  },
+  "chanelle_wind_street.jpg": {
+    "srcHeight": 885,
+    "srcWidth": 1327,
+    "widths": {
+      "1200": "variants/chanelle_wind_street-1200w.webp",
+      "400": "variants/chanelle_wind_street-400w.webp",
+      "800": "variants/chanelle_wind_street-800w.webp"
+    }
   },
   "confident_gaze_portrait_1782310494064.jpg": {
-    "widths": {
-      "400": "variants/confident_gaze_portrait_1782310494064-400w.webp",
-      "800": "variants/confident_gaze_portrait_1782310494064-800w.webp",
-      "1200": "variants/confident_gaze_portrait_1782310494064-1200w.webp"
-    },
+    "srcHeight": 768,
     "srcWidth": 1408,
-    "srcHeight": 768
+    "widths": {
+      "1200": "variants/confident_gaze_portrait_1782310494064-1200w.webp",
+      "400": "variants/confident_gaze_portrait_1782310494064-400w.webp",
+      "800": "variants/confident_gaze_portrait_1782310494064-800w.webp"
+    }
   },
   "editorial_edge_1782310547540.jpg": {
-    "widths": {
-      "400": "variants/editorial_edge_1782310547540-400w.webp",
-      "800": "variants/editorial_edge_1782310547540-800w.webp",
-      "1200": "variants/editorial_edge_1782310547540-1200w.webp"
-    },
+    "srcHeight": 768,
     "srcWidth": 1408,
-    "srcHeight": 768
+    "widths": {
+      "1200": "variants/editorial_edge_1782310547540-1200w.webp",
+      "400": "variants/editorial_edge_1782310547540-400w.webp",
+      "800": "variants/editorial_edge_1782310547540-800w.webp"
+    }
   },
   "event_celebration_1782310588063.jpg": {
-    "widths": {
-      "400": "variants/event_celebration_1782310588063-400w.webp",
-      "800": "variants/event_celebration_1782310588063-800w.webp",
-      "1200": "variants/event_celebration_1782310588063-1200w.webp"
-    },
+    "srcHeight": 768,
     "srcWidth": 1408,
-    "srcHeight": 768
+    "widths": {
+      "1200": "variants/event_celebration_1782310588063-1200w.webp",
+      "400": "variants/event_celebration_1782310588063-400w.webp",
+      "800": "variants/event_celebration_1782310588063-800w.webp"
+    }
   },
   "family_essence_1782310575087.jpg": {
-    "widths": {
-      "400": "variants/family_essence_1782310575087-400w.webp",
-      "800": "variants/family_essence_1782310575087-800w.webp",
-      "1200": "variants/family_essence_1782310575087-1200w.webp"
-    },
+    "srcHeight": 768,
     "srcWidth": 1408,
-    "srcHeight": 768
+    "widths": {
+      "1200": "variants/family_essence_1782310575087-1200w.webp",
+      "400": "variants/family_essence_1782310575087-400w.webp",
+      "800": "variants/family_essence_1782310575087-800w.webp"
+    }
   },
   "family_generations_1782310506742.jpg": {
-    "widths": {
-      "400": "variants/family_generations_1782310506742-400w.webp",
-      "800": "variants/family_generations_1782310506742-800w.webp",
-      "1200": "variants/family_generations_1782310506742-1200w.webp"
-    },
+    "srcHeight": 768,
     "srcWidth": 1408,
-    "srcHeight": 768
+    "widths": {
+      "1200": "variants/family_generations_1782310506742-1200w.webp",
+      "400": "variants/family_generations_1782310506742-400w.webp",
+      "800": "variants/family_generations_1782310506742-800w.webp"
+    }
   },
   "golden_hour_embrace_1782310479605.jpg": {
-    "widths": {
-      "400": "variants/golden_hour_embrace_1782310479605-400w.webp",
-      "800": "variants/golden_hour_embrace_1782310479605-800w.webp",
-      "1200": "variants/golden_hour_embrace_1782310479605-1200w.webp"
-    },
+    "srcHeight": 768,
     "srcWidth": 1408,
-    "srcHeight": 768
+    "widths": {
+      "1200": "variants/golden_hour_embrace_1782310479605-1200w.webp",
+      "400": "variants/golden_hour_embrace_1782310479605-400w.webp",
+      "800": "variants/golden_hour_embrace_1782310479605-800w.webp"
+    }
   },
   "intimate_shadows_boudoir_1782310533874.jpg": {
-    "widths": {
-      "400": "variants/intimate_shadows_boudoir_1782310533874-400w.webp",
-      "800": "variants/intimate_shadows_boudoir_1782310533874-800w.webp",
-      "1200": "variants/intimate_shadows_boudoir_1782310533874-1200w.webp"
-    },
+    "srcHeight": 768,
     "srcWidth": 1408,
-    "srcHeight": 768
+    "widths": {
+      "1200": "variants/intimate_shadows_boudoir_1782310533874-1200w.webp",
+      "400": "variants/intimate_shadows_boudoir_1782310533874-400w.webp",
+      "800": "variants/intimate_shadows_boudoir_1782310533874-800w.webp"
+    }
   },
   "matric_elegance_1782310520668.jpg": {
-    "widths": {
-      "400": "variants/matric_elegance_1782310520668-400w.webp",
-      "800": "variants/matric_elegance_1782310520668-800w.webp",
-      "1200": "variants/matric_elegance_1782310520668-1200w.webp"
-    },
+    "srcHeight": 768,
     "srcWidth": 1408,
-    "srcHeight": 768
+    "widths": {
+      "1200": "variants/matric_elegance_1782310520668-1200w.webp",
+      "400": "variants/matric_elegance_1782310520668-400w.webp",
+      "800": "variants/matric_elegance_1782310520668-800w.webp"
+    }
   },
   "unspoken_frame_boudoir_1782310561368.jpg": {
-    "widths": {
-      "400": "variants/unspoken_frame_boudoir_1782310561368-400w.webp",
-      "800": "variants/unspoken_frame_boudoir_1782310561368-800w.webp",
-      "1200": "variants/unspoken_frame_boudoir_1782310561368-1200w.webp"
-    },
+    "srcHeight": 768,
     "srcWidth": 1408,
-    "srcHeight": 768
+    "widths": {
+      "1200": "variants/unspoken_frame_boudoir_1782310561368-1200w.webp",
+      "400": "variants/unspoken_frame_boudoir_1782310561368-400w.webp",
+      "800": "variants/unspoken_frame_boudoir_1782310561368-800w.webp"
+    }
   }
 }
