@@ -1,0 +1,92 @@
+{
+  "app_icon_photography_1782250263315.jpg": {
+    "widths": {
+      "400": "variants/app_icon_photography_1782250263315-400w.webp",
+      "800": "variants/app_icon_photography_1782250263315-800w.webp",
+      "1200": "variants/app_icon_photography_1782250263315-1200w.webp"
+    },
+    "srcWidth": 1408,
+    "srcHeight": 768
+  },
+  "confident_gaze_portrait_1782310494064.jpg": {
+    "widths": {
+      "400": "variants/confident_gaze_portrait_1782310494064-400w.webp",
+      "800": "variants/confident_gaze_portrait_1782310494064-800w.webp",
+      "1200": "variants/confident_gaze_portrait_1782310494064-1200w.webp"
+    },
+    "srcWidth": 1408,
+    "srcHeight": 768
+  },
+  "editorial_edge_1782310547540.jpg": {
+    "widths": {
+      "400": "variants/editorial_edge_1782310547540-400w.webp",
+      "800": "variants/editorial_edge_1782310547540-800w.webp",
+      "1200": "variants/editorial_edge_1782310547540-1200w.webp"
+    },
+    "srcWidth": 1408,
+    "srcHeight": 768
+  },
+  "event_celebration_1782310588063.jpg": {
+    "widths": {
+      "400": "variants/event_celebration_1782310588063-400w.webp",
+      "800": "variants/event_celebration_1782310588063-800w.webp",
+      "1200": "variants/event_celebration_1782310588063-1200w.webp"
+    },
+    "srcWidth": 1408,
+    "srcHeight": 768
+  },
+  "family_essence_1782310575087.jpg": {
+    "widths": {
+      "400": "variants/family_essence_1782310575087-400w.webp",
+      "800": "variants/family_essence_1782310575087-800w.webp",
+      "1200": "variants/family_essence_1782310575087-1200w.webp"
+    },
+    "srcWidth": 1408,
+    "srcHeight": 768
+  },
+  "family_generations_1782310506742.jpg": {
+    "widths": {
+      "400": "variants/family_generations_1782310506742-400w.webp",
+      "800": "variants/family_generations_1782310506742-800w.webp",
+      "1200": "variants/family_generations_1782310506742-1200w.webp"
+    },
+    "srcWidth": 1408,
+    "srcHeight": 768
+  },
+  "golden_hour_embrace_1782310479605.jpg": {
+    "widths": {
+      "400": "variants/golden_hour_embrace_1782310479605-400w.webp",
+      "800": "variants/golden_hour_embrace_1782310479605-800w.webp",
+      "1200": "variants/golden_hour_embrace_1782310479605-1200w.webp"
+    },
+    "srcWidth": 1408,
+    "srcHeight": 768
+  },
+  "intimate_shadows_boudoir_1782310533874.jpg": {
+    "widths": {
+      "400": "variants/intimate_shadows_boudoir_1782310533874-400w.webp",
+      "800": "variants/intimate_shadows_boudoir_1782310533874-800w.webp",
+      "1200": "variants/intimate_shadows_boudoir_1782310533874-1200w.webp"
+    },
+    "srcWidth": 1408,
+    "srcHeight": 768
+  },
+  "matric_elegance_1782310520668.jpg": {
+    "widths": {
+      "400": "variants/matric_elegance_1782310520668-400w.webp",
+      "800": "variants/matric_elegance_1782310520668-800w.webp",
+      "1200": "variants/matric_elegance_1782310520668-1200w.webp"
+    },
+    "srcWidth": 1408,
+    "srcHeight": 768
+  },
+  "unspoken_frame_boudoir_1782310561368.jpg": {
+    "widths": {
+      "400": "variants/unspoken_frame_boudoir_1782310561368-400w.webp",
+      "800": "variants/unspoken_frame_boudoir_1782310561368-800w.webp",
+      "1200": "variants/unspoken_frame_boudoir_1782310561368-1200w.webp"
+    },
+    "srcWidth": 1408,
+    "srcHeight": 768
+  }
+}

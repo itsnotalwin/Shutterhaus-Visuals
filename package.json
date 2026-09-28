@@ -10,6 +10,8 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "test": "node scripts/test-slot-logic.mjs",
+    "images:optimize": "node scripts/optimize-images.mjs",
+    "images:og": "node scripts/generate-og-image.mjs",
     "backfill:slots": "node scripts/backfill-booked-slots.mjs",
     "backfill:slots:dry": "node scripts/backfill-booked-slots.mjs --dry-run"
   },

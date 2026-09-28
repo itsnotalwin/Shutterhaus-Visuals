@@ -1,15 +1,26 @@
 import { useState, useEffect } from 'react';
 
-export function useImagePreloader(imageUrls: string[]) {
+/**
+ * Preload ONLY the first few images (the above-the-fold ones).
+ *
+ * Why the cap: the previous version preloaded the ENTIRE portfolio — it
+ * appended a `<link rel=preload>` AND constructed an `Image()` for every item,
+ * so a phone pulled all ~7.6MB of full-resolution JPEGs before first paint,
+ * making `loading="lazy"` on the gallery useless. Browsers also warn that
+ * preloading more than a handful of resources defeats the point of preloading.
+ *
+ * `limit` defaults to 1: only the hero. Gallery items lazy-load as they scroll
+ * into view via ResponsiveImage's real srcSet.
+ */
+export function useImagePreloader(imageUrls: string[], limit = 1) {
   const [imagesPreloaded, setImagesPreloaded] = useState(false);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     let isCancelled = false;
     let loadedCount = 0;
-    
-    // Filter out empty URLs just in case
-    const validUrls = imageUrls.filter(url => Boolean(url));
+
+    const validUrls = imageUrls.filter(url => Boolean(url)).slice(0, limit);
     const totalImages = validUrls.length;
 
     if (totalImages === 0) {
@@ -64,7 +75,7 @@ export function useImagePreloader(imageUrls: string[]) {
     return () => {
       isCancelled = true;
     };
-  }, [imageUrls]);
+  }, [imageUrls, limit]);
 
   return { imagesPreloaded, progress };
 }
