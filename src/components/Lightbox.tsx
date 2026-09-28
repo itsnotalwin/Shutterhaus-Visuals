@@ -94,7 +94,7 @@ export default function Lightbox({ item, onClose, onNext, onPrev }: LightboxProp
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              src={item.imageUrl}
+              src={item.fullImageUrl || item.imageUrl}
               alt={item.title}
               referrerPolicy="no-referrer"
               className={`max-w-full max-h-full object-contain cursor-zoom-in transition-transform duration-300 ${
