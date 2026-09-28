@@ -16,9 +16,19 @@ import {
 import { Booking } from '../types';
 import { LOCAL_PACKAGES } from '../packages';
 
+interface TakenSlot {
+  date: string;
+  timeSlot: string;
+}
+
 interface BookingCalendarProps {
-  onAddBooking: (booking: Booking) => void;
+  // Resolves true when the booking was actually persisted. The calendar waits
+  // on this before showing a success confirmation.
+  onAddBooking: (booking: Booking) => Promise<boolean>;
+  // LOCAL ONLY — bookings this browser created. Never fed from Firestore.
   bookings: Booking[];
+  // Occupied slots, from the PII-free `bookedSlots` collection.
+  takenSlots: TakenSlot[];
   onDeleteBooking: (id: string) => void;
   preSelectedPackage?: string;
   isRetainer?: boolean;
@@ -27,6 +37,7 @@ interface BookingCalendarProps {
 export default function BookingCalendar({ 
   onAddBooking, 
   bookings, 
+  takenSlots,
   onDeleteBooking,
   preSelectedPackage,
   isRetainer = true
@@ -41,6 +52,10 @@ export default function BookingCalendar({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [shootType, setShootType] = useState(preSelectedPackage || 'Couples & Families');
+
+  // Truthful submission state: we only show success once the write landed.
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     if (preSelectedPackage) {
@@ -115,7 +130,9 @@ export default function BookingCalendar({
       };
       fetchGcal();
     }
-  }, [bookings]);
+  // Re-check the calendar when availability changes. `takenSlots` is the live
+  // signal (formerly `bookings`, which is no longer read here for PII reasons).
+  }, [takenSlots]);
 
   const parseSlotToTimes = (date: Date, slotTime: string) => {
     try {
@@ -151,10 +168,13 @@ export default function BookingCalendar({
       year: 'numeric'
     });
     
-    // Check local Firestore bookings
-    const isBookedInFirestore = bookings.some(b => 
-      b.date === dateString && 
-      b.timeSlot === slotTime
+    // Check occupied slots (PII-free `bookedSlots`).
+    // SECURITY: this previously read the full `bookings` list — which contains
+    // client names, emails and briefs — just to decide whether a time was
+    // free, exposing every client's details to anonymous visitors.
+    const isBookedInFirestore = takenSlots.some(s => 
+      s.date === dateString && 
+      s.timeSlot === slotTime
     );
     
     if (isBookedInFirestore) return true;
@@ -241,7 +261,7 @@ export default function BookingCalendar({
     { time: '04:30 PM', desc: 'Golden Hour & Twilight Splay' }
   ];
 
-  const handleBookingSubmit = (e: FormEvent) => {
+  const handleBookingSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedDate || !selectedTimeSlot || !name.trim() || !email.trim()) return;
 
@@ -265,7 +285,23 @@ export default function BookingCalendar({
       rawStatus: 'pending'
     };
 
-    onAddBooking(newBooking);
+    // Only claim success once the write has actually landed. Previously the
+    // success modal opened immediately regardless of whether Firestore accepted
+    // the booking, so a rejected write looked like a confirmed booking.
+    // Use the returned value rather than the `bookingWriteFailed` prop, which
+    // is still stale within the same tick.
+    setIsSubmitting(true);
+    const saved = await onAddBooking(newBooking);
+    setIsSubmitting(false);
+
+    if (!saved) {
+      // Write was rejected — keep the form filled in so the client can retry,
+      // and surface the failure instead of a false confirmation.
+      setSubmitError('We could not save your booking. Please try again, or email us directly.');
+      return;
+    }
+    setSubmitError('');
+
     const updatedIds = [...myBookingIds, bookingId];
     setMyBookingIds(updatedIds);
     localStorage.setItem('shutterhaus_my_booking_ids', JSON.stringify(updatedIds));
@@ -769,12 +805,24 @@ export default function BookingCalendar({
                             />
                           </div>
 
+                          {/* Failed-write notice: never claim success on a
+                              booking that was not actually saved. */}
+                          {submitError && (
+                            <div
+                              role="alert"
+                              className="w-full mt-2 px-3 py-2 border border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400 text-[10px] font-mono leading-relaxed"
+                            >
+                              {submitError}
+                            </div>
+                          )}
+
                           {/* Lock In Button */}
                           <button
                             type="submit"
-                            className="w-full py-3 mt-2 bg-accent-light dark:bg-accent-dark hover:opacity-95 text-white dark:text-black text-[10px] tracking-widest font-mono uppercase font-bold flex items-center justify-center gap-1.5 cursor-hover"
+                            disabled={isSubmitting}
+                            className="w-full py-3 mt-2 bg-accent-light dark:bg-accent-dark hover:opacity-95 disabled:opacity-60 disabled:cursor-wait text-white dark:text-black text-[10px] tracking-widest font-mono uppercase font-bold flex items-center justify-center gap-1.5 cursor-hover"
                           >
-                            <span>Lock In Session</span>
+                            <span>{isSubmitting ? 'Saving…' : 'Lock In Session'}</span>
                             <Sparkles className="w-3.5 h-3.5 shrink-0" />
                           </button>
                         </form>

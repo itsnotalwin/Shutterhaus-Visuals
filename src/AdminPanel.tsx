@@ -2010,6 +2010,31 @@ function BookingsManager() {
       });
     } catch (error) {
       console.error("Error updating status:", error);
+      alert("Could not update booking status. Check your admin permissions.");
+      return;
+    }
+
+    // Keep the public calendar in sync.
+    // SECURITY: the public site can no longer read `bookings` (it held client
+    // PII), so availability is published to the separate PII-free `bookedSlots`
+    // collection. Only date + time are copied — never a name, email or brief.
+    if (newStatus === 'approved' || newStatus === 'confirmed') {
+      try {
+        const snap = await getDoc(doc(db, 'bookings', bookingId));
+        const data = snap.data();
+        if (data && data.date && data.time) {
+          const slotId = `${data.date}_${data.time}`.replace(/[^\w]+/g, '_');
+          await setDoc(doc(db, 'bookedSlots', slotId), {
+            date: data.date,
+            time: data.time,
+            status: newStatus,
+            updatedAt: new Date().toISOString(),
+          }, { merge: true });
+        }
+      } catch (error) {
+        console.error("Error publishing booked slot:", error);
+        alert("Booking confirmed, but the calendar slot could not be published. The public site may still show this time as available.");
+      }
     }
   };
 

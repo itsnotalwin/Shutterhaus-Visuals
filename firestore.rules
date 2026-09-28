@@ -1,8 +1,133 @@
 rules_version = '2';
+
+// Shutterhaus Visuals — Firestore security rules
+//
+// Design intent:
+//   - Nothing is readable or writable by anonymous visitors EXCEPT:
+//       * portfolio     -> public READ (it's the shop window), admin WRITE
+//       * messages      -> public CREATE only (contact form), admin reads them
+//       * bookings      -> public CREATE only (booking form), admin manages them
+//       * bookedSlots   -> public READ (date/time only, NO client PII), admin WRITE
+//   - Every read of client PII is admin-only, or the logged-in client reading
+//     their own booking via the Client Portal.
+//   - Admins are identified by the Firebase Auth token email, NOT by anything
+//     written into the database. The 'admins' collection cannot grant power.
+//
+// Public CREATE rules whitelist the exact fields the forms send, so a visitor
+// cannot set status:"approved", forge an admin role, or inject unexpected fields.
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ---- helpers -----------------------------------------------------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email == 'itsnotalwin@gmail.com';
+    }
+
+    // A logged-in client may read their own booking document.
+    function isOwnBooking() {
+      return isSignedIn()
+        && resource.data.clientEmail == request.auth.token.email;
+    }
+
+    // Public create on bookings: only these keys, nothing privileged.
+    function validBookingCreate() {
+      let required = ['clientName', 'clientEmail', 'date', 'time', 'package', 'status'];
+      let allowed  = ['id', 'clientName', 'clientEmail', 'clientPhone', 'company',
+                      'date', 'time', 'duration', 'package', 'vision', 'status',
+                      'createdAt'];
+      return request.resource.data.keys().hasOnly(allowed)
+        && request.resource.data.keys().hasAll(required)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.clientName is string
+        && request.resource.data.clientName.size() > 0
+        && request.resource.data.clientName.size() < 120
+        && request.resource.data.clientEmail is string
+        && request.resource.data.clientEmail.size() > 4
+        && request.resource.data.clientEmail.size() < 120;
+    }
+
+    // Public create on messages: contact form fields only.
+    function validMessageCreate() {
+      let required = ['name', 'email', 'message'];
+      let allowed  = ['id', 'name', 'email', 'service', 'budget', 'message',
+                      'date', 'createdAt'];
+      return request.resource.data.keys().hasOnly(allowed)
+        && request.resource.data.keys().hasAll(required)
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() < 120
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 4
+        && request.resource.data.email.size() < 120
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() < 5000;
+    }
+
+    // Public availability collection must never carry client PII.
+    function slotIsClean() {
+      return request.resource.data.keys()
+        .hasOnly(['date', 'time', 'id', 'createdAt']);
+    }
+
+    // ---- admins ------------------------------------------------------------
+
+    match /admins/{uid} {
+      // Readable by the admin only. Creating a doc here grants NOTHING, because
+      // isAdmin() checks the auth token, not this collection.
+      allow read, write: if isAdmin();
+    }
+
+    // ---- portfolio ---------------------------------------------------------
+
+    match /portfolio/{id} {
+      // Public can see the work. Only the admin can change it.
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---- messages (contact form) ------------------------------------------
+
+    match /messages/{id} {
+      // Anyone may submit the contact form — but may NOT read the inbox.
+      // Without this, every enquiry (names, emails, budgets) is public.
+      allow create: if validMessageCreate();
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ---- bookings ----------------------------------------------------------
+
+    match /bookings/{id} {
+      // Public may create a booking request, and read ONLY their own.
+      // Listing the collection is denied to anonymous users, so the whole
+      // client book of business stops being scrapable.
+      allow create: if validBookingCreate();
+      allow read: if isAdmin() || isOwnBooking();
+      allow update, delete: if isAdmin();
+    }
+
+    // ---- availability (public, PII-free) ----------------------------------
+
+    // The booking calendar needs to know which slots are taken, but it must not
+    // learn who booked them. Admin mirrors date+time here on approve.
+    match /bookedSlots/{id} {
+      allow read: if true;
+      allow create, update: if isAdmin() && slotIsClean();
+      allow delete: if isAdmin();
+    }
+
+    // ---- default deny ------------------------------------------------------
+
+    // Anything not explicitly matched above is closed to everyone.
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

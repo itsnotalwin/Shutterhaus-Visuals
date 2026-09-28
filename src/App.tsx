@@ -13,6 +13,7 @@ import {
   Send,
   Star,
   CheckCircle2,
+  AlertCircle,
   ChevronRight,
   Menu,
   X,
@@ -41,7 +42,6 @@ import {
   query,
   setDoc,
   doc,
-  deleteDoc,
 } from "firebase/firestore";
 import { useImagePreloader } from "./hooks/useImagePreloader";
 import { LocalPackage, LOCAL_PACKAGES } from "./packages";
@@ -155,7 +155,22 @@ export default function App() {
   });
   const [showInbox, setShowInbox] = useState(false);
 
+  // Slots that are taken, derived from the PII-free `bookedSlots` collection.
+  // This is what the public calendar uses to grey out unavailable times.
+  const [takenSlots, setTakenSlots] = useState<
+    { date: string; timeSlot: string }[]
+  >([]);
+
+  // Set when a Firestore write is rejected, so the UI can tell the truth
+  // instead of claiming success on a booking/message that was never saved.
+  const [bookingWriteFailed, setBookingWriteFailed] = useState(false);
+  const [messageWriteFailed, setMessageWriteFailed] = useState(false);
+
   // Bookings scheduling state
+  // SECURITY: this list is LOCAL ONLY — it holds the bookings this browser
+  // created, for the "my sessions" panel. It is never populated from the
+  // `bookings` Firestore collection, which is admin-only. A visitor's own
+  // booking is still shown to them because it lives in their own storage.
   const [bookings, setBookings] = useState<Booking[]>(() => {
     try {
       const saved = localStorage.getItem("shutterhaus_bookings");
@@ -231,34 +246,24 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Sync with Firestore bookings in real-time
+  // Track which slots are taken for calendar availability.
+  // SECURITY: this reads the PII-free `bookedSlots` collection, NOT `bookings`.
+  // The `bookings` collection holds client names, emails and briefs and is
+  // admin-only in firestore.rules — reading it here would leak every client
+  // record to anonymous visitors. Never query `bookings` from the public site.
   useEffect(() => {
-    const q = query(collection(db, "bookings"));
+    const q = query(collection(db, "bookedSlots"));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const firestoreBookings = snapshot.docs.map((doc) => {
+        const taken = snapshot.docs.map((doc) => {
           const data = doc.data();
-          return {
-            id: doc.id,
-            name: data.clientName || data.name || "Anonymous Client",
-            email: data.clientEmail || data.email || "",
-            service: data.package || data.service || "Photography Session",
-            date: data.date || "",
-            timeSlot: data.time || data.timeSlot || "",
-            vision: data.vision || "",
-            timestamp: data.timestamp || "",
-            status:
-              ["approved", "Confirmed", "shooting", "retouching", "delivered"].includes(data.status)
-                ? "Confirmed"
-                : "Pending Review",
-            rawStatus: data.status || "pending",
-          } as Booking;
+          return { date: data.date || "", timeSlot: data.time || "" };
         });
-        setBookings(firestoreBookings);
+        setTakenSlots(taken);
       },
       (error) => {
-        console.log("Using local bookings cache. Firestore error:", error);
+        console.log("Using local availability cache. Firestore error:", error);
       },
     );
     return () => unsubscribe();
@@ -441,8 +446,13 @@ export default function App() {
         date: newMessage.timestamp,
       });
     } catch (err) {
+      // Do NOT report success on a failed write — a rejected message write
+      // previously still showed the client "Message Sent", losing the enquiry.
       console.error("Failed to save message to Firestore", err);
+      setMessageWriteFailed(true);
+      return;
     }
+    setMessageWriteFailed(false);
 
     setSentMessages([newMessage, ...sentMessages]);
     setFormSuccess(true);
@@ -461,7 +471,10 @@ export default function App() {
     setSentMessages(sentMessages.filter((m) => m.id !== id));
   };
 
-  const handleAddBooking = async (newBooking: Booking) => {
+  const handleAddBooking = async (newBooking: Booking): Promise<boolean> => {
+    // SECURITY: a visitor may CREATE a booking (that is the whole point of the
+    // contact form) but may never read, update or delete anyone else's. The
+    // firestore.rules `bookings` create rule enforces this server-side.
     try {
       await setDoc(doc(db, "bookings", newBooking.id), {
         id: newBooking.id,
@@ -477,17 +490,26 @@ export default function App() {
         status: "pending",
       });
     } catch (err) {
+      // Do NOT report success on a failed write. Previously this only logged and
+      // the client was told the booking was received — meaning a rejected write
+      // silently lost the booking. Surface the failure instead.
       console.error("Failed to save booking to Firestore", err);
+      setBookingWriteFailed(true);
+      return false;
     }
+    setBookingWriteFailed(false);
     setBookings([newBooking, ...bookings]);
+    return true;
   };
 
-  const handleDeleteBooking = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, "bookings", id));
-    } catch (err) {
-      console.error("Failed to delete booking from Firestore", err);
-    }
+  // Cancelling is a LOCAL operation only.
+  // SECURITY: visitors have no delete rights on `bookings` (and must not — that
+  // would let anyone wipe the client book). This previously called deleteDoc
+  // from the public bundle, which both violated the rules and exposed the
+  // deletion capability to anyone with devtools. Cancellations are now just
+  // removed from this browser's local list; the admin panel is the only place
+  // that can delete a real booking.
+  const handleDeleteBooking = (id: string) => {
     setBookings(bookings.filter((b) => b.id !== id));
   };
 
@@ -1227,6 +1249,7 @@ export default function App() {
                 <BookingCalendar
                   onAddBooking={handleAddBooking}
                   bookings={bookings}
+                  takenSlots={takenSlots}
                   onDeleteBooking={handleDeleteBooking}
                   preSelectedPackage={preSelectedPackage}
                   isRetainer={isRetainer}
@@ -1311,7 +1334,19 @@ export default function App() {
 
                 {/* FORM */}
                 <form onSubmit={handleFormSubmit} className="space-y-5">
-                  {formSuccess && (
+                  {messageWriteFailed && (
+                    <div
+                      role="alert"
+                      className="flex items-start gap-2.5 bg-red-500/10 border border-red-500/30 p-4 text-xs text-red-700 dark:text-red-400 font-mono"
+                    >
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>
+                        We could not save your message. Please try again, or
+                        email us directly so we do not lose your enquiry.
+                      </span>
+                    </div>
+                  )}
+                  {formSuccess && !messageWriteFailed && (
                     <div className="flex items-start gap-2.5 bg-green-500/10 border border-green-500/30 p-4 text-xs text-green-700 dark:text-green-400 font-mono">
                       <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
                       <span>
