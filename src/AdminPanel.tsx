@@ -2018,7 +2018,15 @@ function BookingsManager() {
     // SECURITY: the public site can no longer read `bookings` (it held client
     // PII), so availability is published to the separate PII-free `bookedSlots`
     // collection. Only date + time are copied — never a name, email or brief.
-    if (newStatus === 'approved' || newStatus === 'confirmed') {
+    //
+    // The real status vocabulary from the dropdown is:
+    //   pending | approved | shooting | retouching | delivered
+    // Only `pending` leaves a slot open; every other status means the shoot is
+    // committed and the date must be blocked. Mirroring on approve alone (as a
+    // first pass did) left `shooting`/`retouching`/`delivered` unmirrored, so
+    // already-agreed shoots still showed as bookable online.
+    const PENDING_STATUSES = ['pending', ''];
+    if (newStatus && !PENDING_STATUSES.includes(newStatus.toLowerCase())) {
       try {
         const snap = await getDoc(doc(db, 'bookings', bookingId));
         const data = snap.data();

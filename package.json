@@ -8,7 +8,10 @@
     "build": "vite build && cp dist/index.html dist/404.html && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "node scripts/test-slot-logic.mjs",
+    "backfill:slots": "node scripts/backfill-booked-slots.mjs",
+    "backfill:slots:dry": "node scripts/backfill-booked-slots.mjs --dry-run"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
